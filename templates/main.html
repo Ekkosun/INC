@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en" style="height: 100%;">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- prettier-ignore -->
+<link rel="stylesheet" href="static/lib/file_tree/themes/proton/style.min.css">
+<link rel="stylesheet" href="static/css/main.css">
+<link rel="stylesheet" type="text/css" href="static/lib/bootstrap.min.css">
+<link rel="stylesheet" href="static/lib/xterm/css/xterm.css">
+<script src="static/lib/jquery.min.js"></script>
+<script src="static/lib/splitjs.min-1.2.0.js"></script>
+<script src="static/lib/ace/src/ace.js"></script>
+<script src="static/lib/ace/src/ext-language_tools.js"></script>
+<script src="static/lib/file_tree/jstree.min.js"></script>
+<script src="static/lib/bootstrap.bundle.min.js"></script>
+<script src="static/lib/socket.io.min.js"></script>
+<script src="static/lib/xterm/lib/xterm.js"></script>
+<script src="static/lib/recorder.mp3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/jcubic/jquery.terminal@devel/js/jquery.terminal.min.js"></script>
+<script src="static/lib/chart.min.js"></script>
+<link href="https://cdn.jsdelivr.net/gh/jcubic/jquery.terminal@devel/css/jquery.terminal.min.css" rel="stylesheet" />
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        .gutter {
+            background-color: #202020;
+            background-repeat: no-repeat;
+            background-position: 50%;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+        }
+        
+        .gutter.gutter-horizontal {
+            cursor: col-resize;
+        }
+    </style>
+
+    <title>INC</title>
+</head>
+
+<body style="height:100%; width: 100%; background-color:#272822;">
+    <div class="row" style="height: 100%;">
+        <div class="col" style="height: 6%;">
+            <div class="container-fluid" style="height:100%;">
+                <div class="row">
+                    <div class="col-2"></div>
+                    <div class="col">
+                        <div class="input-group flex-nowrap" style="height: 80%;">
+                            <div class="input-group-prepend">
+                                <button>
+                                <img src="static/icon/debug-alt.svg" id="compile-load" class="debug_icon">
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col control">
+                        <button>
+                        <img src="static/icon/debug-restart.svg" id="control-start" class="debug_icon">
+                        </button>
+                        <button>
+                        <img src="static/icon/debug-start.svg" id="control-run" class="debug_icon">
+                    </button>
+                        <button>
+                        <img src="static/icon/debug-continue.svg" id="control-next" class="debug_icon">
+                    </button>
+                        <button>
+                        <img src="static/icon/debug-step-into.svg" id="control-stepin" class="debug_icon">
+                    </button>
+                        <button>
+                        <img src="static/icon/debug-step-out.svg" id="control-stepout" class="debug_icon">
+                    </button>
+                        <button>
+                        <img src="static/icon/debug-pause.svg" id="control-pause" class="debug_icon">
+                    </button>
+                        <button>
+                        <img src="static/icon/debug-stop.svg" id="control-stop" class="debug_icon">
+                    </button>
+                    </div>
+                    <div class="col">
+                        <!-- <button>
+                            <img src="static/icon/more.svg" id="op-extensions" class="op_icon">
+                        </button> -->
+                        <div id="more-func">
+                            <button>
+                                <img src="static/icon/more.svg" id="op-extensions" class="op_icon">
+                            </button>
+                            <ul id="funcs" class="item_list">
+                                <a id="public" class="selection unselect" href="javascript:void(0)">发布示例</a>
+                                <a id="learn" class="selection unselect" href="javascript:void(0)">学习示例</a>
+                                <a id="manage_public" class="selection unselect" href="javascript:void(0)">管理发布的示例</a>
+                                <a id="attach_file" class="selection unselect" href="javascript:void(0)">添加附件</a>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="w-100"></div>
+                </div>
+            </div>
+        </div>
+        <div class="w-100"></div>
+        <div class="col split " style="height: 94%; display: flex; flex-direction: column;">
+            <div style="height: 70% ;" id="s0">
+                <div class="split" style="display: flex; flex-direction: row; height: 100%;">
+                    <div id="split-0" style=" height: 100%;">
+                        <div id="file_tree" style="height: 100%; width: 50%; color: white;">
+                        </div>
+                    </div>
+                    <div id="split-1" style=" height: 100%;">
+                        <div id="editor" style="width: 100%; height: 100%;">
+                        </div>
+                    </div>
+                    <div id="split-2" style=" height: 100%;">
+                        <div id="memo_dis" style="height: 100%; width: 100%;">
+
+                            <div id="stack" style="height: 100%;">
+
+                            </div>
+                        </div>
+                        <div id="chart_dis" style="height: 100%; display: none;">
+                            <canvas id="myChart" style="height: 100%; width: 100%;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="split" style="height: 30%; display: flex; flex-direction: row;" id="s1">
+                <div style="height: 100%; background-color: #272822; color: azure;" id="ss0">
+                    <div id="terminal" style="height: 100%;"></div>
+                </div>
+                <div style="height: 100%; background-color: #272822; color: azure; width: 100%;" id="ss1">
+                    <div id="globals">
+                        <div class="tag">全局变量</div>
+                    </div>
+                </div>
+                <div style="height: 100%; background-color: #272822; color: azure; width: 100%;" id="ss2">
+                    <div id="compileinfo" style="height: 100%;">
+                        <div class="tag">编译信息</div>
+                    </div>
+                    <div id="show_attachment" class="noheight" style="display: none;height: 100%;"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="public_form" class="pop_win ">
+        <form>
+            <div class="text_layout">
+                <label for="example_author" class="form-label">作者名</label>
+                <input id="example_author" type="text" class="form-control">
+                <label for="example_name" class="form-label">示例名</label>
+                <input id="example_name" type="text" class="form-control">
+                <label for="example_description" class="form-label">简介</label>
+                <input id="example_description" type="text" class="form-control">
+            </div>
+            <div class="btn_layout">
+                <input id="confirm-public" type="button" class="btn btn-primary" value="confirm">
+                <input id="cancle-public" type="button" class="btn btn-secondary" value="cancle">
+            </div>
+        </form>
+    </div>
+
+    <div id="example" class="pop_win">
+        <div id="example_list" class="nolength">
+            <div class="example_item">
+                <div class="example_id">用户ID</div>
+                <div class="example_name">示例名</div>
+                <div class="example_description">示例简介</div>
+            </div>
+        </div>
+        <div class="btn_layout">
+            <input id="cancle-learn" type="button" class="btn btn-secondary" value="cancle">
+        </div>
+    </div>
+
+    <div id="attach" class="pop_win">
+        <form>
+            <div class="text_layout">
+                <label for="attach_code_file" class="form-label">待添加文件名</label>
+                <input id="attach_code_file" type="text" name="filename" class="form-control">
+                <label for="attach_line" class="form-label">行号</label>
+                <input id="attach_line" type="text" name="line" class="form-control">
+                <label for="attachment" class="form-label">附件</label>
+                <input id="attachment" type="file" accept=".txt,audio/*,video/*,image/*" class="form-control" name="file">
+                <div id="rec_audio">
+                    <input id="start_rec" class="btn btn-primary" type="button" value="开始录音">
+                    <input id="end_rec" class="btn btn-primary" type="button" value="结束并播放">
+                </div>
+            </div>
+            <div class="btn_layout">
+                <input id="attach_submit" type="submit" class="btn btn-primary" alue="submit">
+                <input id="attach_cancle" type="button" class="btn btn-secondary" value="cancle">
+            </div>
+        </form>
+    </div>
+
+    <div id="manage" class="pop_win">
+        <div id="manage_list" class="nolength">
+            <div class="example_item">
+                <div class="example_id">用户ID</div>
+                <div class="example_name">示例名</div>
+                <div class="example_description">示例简介</div>
+            </div>
+        </div>
+        <div class="btn_layout">
+            <input id="cancle-manage" type="button" class="btn btn-secondary" value="cancle">
+        </div>
+    </div>
+
+</body>
+<script>
+    gdbpid = '{{gdbpid}}'
+    id = '{{id}}'
+    file_path = []
+    '{% for v in filepath%}'
+    file_path.push('{{v}}')
+    '{% endfor %}'
+    var event = (action) => new CustomEvent("action", {
+        "detail": action
+    })
+
+    var refresh = () => new CustomEvent("refresh")
+
+    var socket = io('/gdb_listener', {
+        query: {
+            gdbpid: gdbpid
+        }
+    })
+    var program = {
+        "globals": [],
+        "globalcmd": [],
+        "curfile": null,
+        "curline": null,
+        "frames": {
+
+        },
+        "framenum": 0,
+
+    }
+
+    var point_color = new Map()
+    $('#stack').on('contextmenu', function(e) {
+        return false;
+    })
+    $('#stack').on('mousedown', ".cards", function(e) {
+        if (e.which == 3)
+            if ($(this).hasClass('open')) {
+                $(this).removeClass('open');
+                // $('.cards').removeClass('shadow-2');
+                $(this).removeClass('shadow-2');
+                let locals = $(this).children('.locals')
+                locals.removeClass('open');
+                $(this).addClass('shadow-1');
+
+                return false;
+            } else {
+                // $('.cards').removeClass('open');
+                // $('.cards').removeClass('shadow-2');
+                $(this).removeClass('shadow-2');
+                // let locals = $('.cards').children('.locals')
+                // locals.removeClass('open');
+                $(this).addClass('open');
+                $(this).addClass('shadow-2');
+                locals = $(this).children('.locals')
+                locals.addClass('open');
+            }
+    });
+    iscontinue = 0
+</script>
+<script src="static/js/attachment.js"></script>
+<script src="static/js/public.js"></script>
+<script src="static/js/learn_example.js"></script>
+<script src="static/js/manage_public.js"></script>
+<script src="static/js/visual.js"></script>
+<script src="static/js/const.js"></script>
+<script src="static/js/paser.js"></script>
+<script src="static/js/state_machine.js"></script>
+<script src="static/js/socket.js"></script>
+<script src="static/js/file_tree.js"></script>=
+<script>
+    Split(["#split-0", "#split-1", "#split-2"], {
+        sizes: [10, 40, 50]
+    })
+    Split(["#s0", "#s1"], {
+        sizes: [70, 30],
+        direction: 'vertical',
+    })
+    Split(["#ss0", "#ss1", "#ss2"])
+
+
+    jQuery(function($, undefined) {
+        $('#terminal').terminal(function(command) {
+            if (command !== '') {
+                send_input(command)
+                console.log(command)
+            }
+        }, {
+            greetings: 'The Input/Output of program is here, Use clear to clear the screen',
+            name: 'none',
+            prompt: '<= '
+        });
+    });
+
+
+    $('#globals').on('dblclick', ".item", function() {
+        let data = $(this).find('.ptrorarray').text()
+        if ($(this).find('.ptrorarray').text() == "") {
+            return
+        } else if ($(this).find('.ptrorarray').first().text() == "array") {
+            list_item($(this))
+        } else if ($(this).find('.ptrorarray').first().text() == "ptr") {
+            list_pointer($(this))
+        }
+    })
+
+
+    var chart_data = {
+        labels: [],
+        datasets: [{
+            label: [],
+            backgroundColor: 'rgb(255, 99, 132)',
+            borderColor: 'rgb(255, 99, 132)',
+            data: [],
+        }]
+    }
+
+    var config = {
+        type: 'line',
+        data: chart_data,
+        options: {
+            plugins: {
+                legend: {
+                    display: false,
+                }
+            },
+            scales: {
+                y: {
+
+                    grid: {
+                        color: 'grey'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'grey'
+                    }
+                }
+            }
+        }
+    }
+    Chart.defaults.color = '#F8F8F2';
+    const myChart = new Chart(
+        document.getElementById('myChart'),
+        config
+    )
+</script>
+
+
+<script src="static/js/editor.js"></script>
+
+</html>

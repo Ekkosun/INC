@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>用户登录</title>
+    <link rel="stylesheet" href="static/css/index.css" />
+</head>
+
+<body>
+    <div class="login">
+        <h2>用户登录</h2>
+        <form action="/login" , id="login_form" , method="post">
+            <div class="login_box">
+
+                <input id="username" type="text" required="required" name="id" /><label>用户名</label>
+            </div>
+            <div class="login_box">
+                <input id="password" type="password" required="required" name="password" /><label>密码</label>
+            </div>
+        </form>
+        <a id="login" href="javascript:void(0)">
+				登录
+				<span></span>
+				<span></span>
+				<span></span>
+				<span></span>
+			</a>
+    </div>
+
+</body>
+<script>
+    let username = document.getElementById("username")
+    let password = document.getElementById("password")
+    let form = document.getElementById("login_form")
+    let button = document.getElementById("login")
+    button.addEventListener("click", (e) => {
+        e.preventDefault()
+        form.submit()
+    })
+</script>
+
+</html>
