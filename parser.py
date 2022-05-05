@@ -232,8 +232,6 @@ def _parse_array(stream: StringStream):
         elif c == ",":
             pass
         elif c == "]":
-            # Stop when this array has finished. Note
-            # that elements of this array can be also be arrays.
             break
 
     return arr

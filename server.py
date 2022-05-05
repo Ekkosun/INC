@@ -26,7 +26,6 @@ def connect_handler():
     desired_gdbpid = int(request.args.get("gdbpid", 0))
     try:
         if desired_gdbpid:
-            # connect to exiting debug session
             debug_session = manager.connect_client_to_debug_session(
                 desired_gdbpid=desired_gdbpid, client_id=request.sid
             )
@@ -40,7 +39,6 @@ def connect_handler():
                 },
             )
         else:
-            # start new debug session
             gdb_command = request.args.get("gdb_command", app.config["gdb_command"])
             mi_version = request.args.get("mi_version", "mi2")
             debug_session = manager.add_new_debug_session(
@@ -61,7 +59,6 @@ def connect_handler():
             {"message": f"Failed to establish gdb session: {e}", "ok": False},
         )
 
-    # Make sure there is a reader thread reading. One thread reads all instances.
     if manager.gdb_reader_thread is None:
         manager.gdb_reader_thread = websocket.start_background_task(
             target=read_and_forward_gdb_and_pty_output
