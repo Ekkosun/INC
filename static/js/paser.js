@@ -355,6 +355,9 @@ function get_addr(variable, frame) {
     }
 }
 
+function set_break_point(res) {
+
+}
 
 function set_curposition(res) {
     program.curfile = res.payload.frame.file

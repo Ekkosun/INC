@@ -54,7 +54,6 @@ socket.on("compile", (data) => {
             "cmd": ["0-file-exec-and-symbols ./a.o",
                 "999-symbol-info-variables ",
                 "0-file-exec-and-symbols ./a.out",
-                "0-break-insert main",
             ]
         })
     } else {

@@ -128,6 +128,7 @@ function compile_load() {
 
 
 function start_run() {
+    set_break()
     let cmd = new Array()
     if (addarray.length) {
         for (let v of addarray)
@@ -139,6 +140,7 @@ function start_run() {
             cmd.push(v)
         deletearray = []
     }
+    // cmd.push("-break-delete")
     cmd.push("-exec-run")
     editor.setReadOnly(true)
     socket.emit("run_gdb_command", {
@@ -181,6 +183,7 @@ function exit_handler() {
 
 
 function next_line() {
+    set_break()
     let cmd = new Array()
     if (addarray.length) {
         for (let v of addarray)
@@ -202,6 +205,7 @@ function next_line() {
 }
 
 function step_in() {
+    set_break()
     let cmd = new Array()
     if (addarray.length) {
         for (let v of addarray)
@@ -224,6 +228,7 @@ function step_in() {
 
 
 function step_out() {
+    set_break()
     let cmd = new Array()
     if (addarray.length) {
         for (let v of addarray)
@@ -247,6 +252,13 @@ function step_out() {
 function exit_run() {
     clear_visual()
     clear_program_status()
+    map = new Map()
+    cmd = new Array()
+    cmd.push("-break-delete")
+    socket.emit("run_gdb_command", {
+        "id": id,
+        "cmd": cmd
+    })
     window.clearTimeout(timeoutid)
     $("#compileinfo").css("display", "block")
     $("#show_attachment").css("display", "none")

@@ -412,7 +412,23 @@ def delete_my_public(data):
             "status":True
         })
 
-
+@websocket.on("line_change",namespace="/gdb_listener")
+def line_change(data):
+    file = data["file"]
+    id = data["id"]
+    start = data["start"]
+    num = data["num"]
+    file_path = os.path.join(app.config["STORE_PATH"],id)
+    file_path = Path(file_path)
+    fs = [x for x in file_path.iterdir() if x.is_file() and x.suffix==".asset"]
+    for f in fs:
+        pos = f.stem.find(file)
+        if(pos==-1):
+            continue
+        line = int(f.stem[pos+len(file):])
+        if(line>start):
+            line=line+num
+            os.rename(f.as_posix(),os.path.join(file_path.as_posix(),f"{file}{line}.asset"))
 
 if __name__ == '__main__':
     db.create_all()

@@ -39,16 +39,21 @@ $('#file_tree').on("select_node.jstree", (e, data) => {
             v.marker = null
         }
     curfile = data.node.text
-    if (breakarray[curfile]) {
-        breakarray[curfile].forEach((v, i) => {
+    if (breakarray.get(curfile)) {
+        breakarray.get(curfile).forEach((v, i) => {
             editor.session.setBreakpoint(i)
         });
     }
     content = sessionStorage.getItem(curfile)
-    if (content)
+    if (content) {
+        ignore = true
         editor.setValue(content, 1)
-    else
+        ignore = false
+    } else {
+        ignore = true
         editor.setValue("", 1)
+        ignore = false
+    }
     visual_info()
 })
 
@@ -69,9 +74,13 @@ $('#file_tree').on("rename_node.jstree", (e, data) => {
     sessionStorage.removeItem(old)
     if (content) {
         sessionStorage.setItem(curfile, content)
+        ignore = true
         editor.setValue(content)
+        ignore = false
     } else {
-        editor.setValue("")
+        ignore = true
+        editor.setValue("", 1)
+        ignore = false
         sessionStorage.setItem(curfile, "")
     }
     remove_file(old)
@@ -183,9 +192,11 @@ function refresh_tree() {
 }
 
 function remove_file(filename) {
+    ignore = true
+    editor.session.setValue("", 1)
+    ignore = false
     let url = window.origin + "/main/remove_file?id=" + id + "&filename=" + filename
     $.get(url, (data) => {}, "json")
-    editor.session.setValue("", 1)
 }
 
 function select(name) {
