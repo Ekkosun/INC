@@ -132,9 +132,11 @@ socket.on("gdb_response", (data) => {
 socket.on("program_pty_response", (data) => {
     let len = data.length
     console.log(data)
-    if (data[len - 1] == '\n')
+    if (data[len - 1] == '\n') {
         data = data.substr(0, data.length - 1);
-    $('#terminal').terminal().echo("=> " + data)
+        $('#terminal').terminal().echo(data)
+    } else
+        $('#terminal').terminal().echo(data, { newline: false })
 })
 
 function send_input(data) {

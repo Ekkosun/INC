@@ -221,8 +221,9 @@ function parser_frame(res) {
             }
         }
     }
-    // refresh_stack()
-    // document.dispatchEvent(refresh())
+    get_locals()
+        // refresh_stack()
+        // document.dispatchEvent(refresh())
 
 }
 

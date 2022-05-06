@@ -157,7 +157,7 @@ function pause_handler() {
     $(".point").removeClass("point")
     get_globals_value()
     get_frame()
-    get_locals()
+    refresh_buff()
 
     setTimeout(() => {
         if (state_var == STATE_PAUSE) {
@@ -289,4 +289,11 @@ function clear_program_status() {
         "frames": {},
         "framenum": 0
     }
+}
+
+function refresh_buff() {
+    socket.emit("run_gdb_command", {
+        "id": id,
+        "cmd": ["-data-evaluate-expression ((void(*)(int))fflush)(0)"]
+    })
 }

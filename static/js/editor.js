@@ -51,6 +51,9 @@ editor.on("guttermousedown", function(e) {
     e.stop();
 })
 
+editor.on("change", function(e) {
+    console.log(e)
+})
 
 function check() {
 
