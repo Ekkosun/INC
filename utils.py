@@ -13,7 +13,7 @@ def get_file(path, file_tree={},file_path=[]):
     dirs = [x for x in path.iterdir() if x.is_dir()]
     fs = [x for x in path.iterdir() if x.is_file()]
     for f in fs:
-        if f.suffix==".o" or f.suffix==".out" or f.name=='out'  or f.name=='description' or f.name=='author'or f.suffix==".asset" :
+        if f.suffix==".o" or f.suffix==".out" or f.name=='out'  or f.suffix==".des" or f.name=='description' or f.name=='author'or f.suffix==".asset" :
             continue
         file_tree["children"].append({"text": f.name, "type": ".c" , "id":f.name})
         file_path.append(f.as_posix())

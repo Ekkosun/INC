@@ -3,7 +3,7 @@ $("#learn").on('click', function() {
     get_example_list()
 })
 
-$('#cancle-learn').on('click', function() {
+$('#cancel-learn').on('click', function() {
     $('#example').css("display", "none")
 })
 

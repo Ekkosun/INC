@@ -1,4 +1,5 @@
 var curfile
+var select_line = false
 var ignore = false
 var breakarray = new Map()
 var map = new Map()

@@ -13,7 +13,7 @@ $('#confirm-public').on('click', function() {
     $('#public_form').css("display", "none")
 })
 
-$('#cancle-public').on('click', function() {
+$('#cancel-public').on('click', function() {
     $('#public_form').css("display", "none")
 })
 

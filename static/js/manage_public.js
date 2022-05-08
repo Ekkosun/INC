@@ -4,7 +4,7 @@ $("#manage_public").on('click', () => {
 })
 
 
-$('#cancle-manage').on('click', function() {
+$('#cancel-manage').on('click', function() {
     $('#manage').css("display", "none")
 })
 

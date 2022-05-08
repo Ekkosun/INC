@@ -263,7 +263,8 @@ function parser_local(res) {
                 "name": varname,
                 "type": vartype.substr(0, vartype.indexOf(" ")),
                 "value": varvalue,
-                "times": 0
+                "times": 0,
+                "addr": null
             })
         else if (is_ptr(vartype)) {
             locals.push({
@@ -271,7 +272,8 @@ function parser_local(res) {
                 "name": varname,
                 "type": vartype.substr(0, vartype.indexOf(" ")),
                 "value": varvalue,
-                "times": 0
+                "times": 0,
+                "addr": null
             })
         } else {
             locals.push({
@@ -279,7 +281,8 @@ function parser_local(res) {
                 "name": varname,
                 "type": vartype,
                 "value": varvalue,
-                "times": 0
+                "times": 0,
+                "addr": null
             })
         }
     }
@@ -323,22 +326,26 @@ function parser_local_addr(res) {
     if (!program.frames[String(frame)])
         return
     let name = program.frames[String(frame)].locals[index].name
-    if (program.frames[String(frame)].map) {
-        let i = 0;
-        for (let [key, val] of program.frames[String(frame)].map) {
-            if (key != res.payload.value && val == name) {
-                i++;
-            } else if (key == res.payload.value && name == escape(val)) {
-                return
-            }
-        }
-        name = "~".repeat(i) + name
-        program.frames[String(frame)].map.set(res.payload.value, name)
-    } else {
-        program.frames[String(frame)].map = new Map()
-        program.frames[String(frame)].map.set(res.payload.value, name)
+    if (!program.frames[String(frame)].locals[index].addr) {
+        program.frames[String(frame)].locals[index].addr = res.payload.value
     }
-    // updata_frame(program.frames[String(frame)], String(frame))
+    if (res.payload.value)
+        if (program.frames[String(frame)].map) {
+            let i = 0;
+            for (let [key, val] of program.frames[String(frame)].map) {
+                if (key != res.payload.value && val == name) {
+                    i++;
+                } else if (key == res.payload.value && name == escape(val)) {
+                    return
+                }
+            }
+            name = "~".repeat(i) + name
+            program.frames[String(frame)].map.set(res.payload.value, name)
+        } else {
+            program.frames[String(frame)].map = new Map()
+            program.frames[String(frame)].map.set(res.payload.value, name)
+        }
+        // updata_frame(program.frames[String(frame)], String(frame))
 }
 
 

@@ -427,8 +427,21 @@ def line_change(data):
             continue
         line = int(f.stem[pos+len(file):])
         if(line>start):
-            line=line+num
-            os.rename(f.as_posix(),os.path.join(file_path.as_posix(),f"{file}{line}.asset"))
+            os.rename(f.as_posix(),os.path.join(file_path.as_posix(),f"{file}{line+num}.asset"))
+            os.rename(os.path.join(file_path.as_posix(),f"{file}{line}.des"),os.path.join(file_path.as_posix(),f"{file}{line+num}.des"))
+
+@websocket.on("delete_attachment",namespace="/gdb_listener")
+def delete_attachment(data):
+    id =data["id"]
+    name = data["name"]
+    file_path = os.path.join(app.config["STORE_PATH"],id)
+    os.remove(os.path.join(file_path,f"{name}.asset"))
+    os.remove(os.path.join(file_path,f"{name}.des"))
+    emit("delete_attachment_response",{
+        "status":True
+    })
+    
+
 
 if __name__ == '__main__':
     db.create_all()

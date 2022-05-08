@@ -46,14 +46,6 @@ function list_item(item) {
             $("#split-2").css("display", "flex")
             $("#split-2").css("flex-direction", "row")
 
-            let labels = new Array()
-            for (let i = 0; i < data.length; i++) {
-                labels.push("[" + i + "]")
-            }
-            myChart.data.datasets.label = name
-            myChart.data.labels = labels
-            myChart.data.datasets[0].data = data
-            myChart.update()
         } else {
             item.find("img").attr("src", "static/icon/expand-all.svg")
             $("#chart_dis").css("display", "none")
@@ -79,14 +71,6 @@ function updata_list(item) {
                 item.children("ul").children("li").eq(i).children('.value').text(data[i])
             }
         }
-        let labels = new Array()
-        for (let i = 0; i < data.length; i++) {
-            labels.push(name + "[" + i + "]")
-        }
-
-        myChart.data.labels = labels
-        myChart.data.datasets[0].data = data
-        myChart.update()
     }
 }
 
@@ -134,6 +118,7 @@ function update_var(dom, variable) {
 
     } else {
         let item = $("<div " + "id=" + variable.name + variable.times + " class='item'>" + "<div class='menu unselect'>" + "<div class='ptrorarray'>" + variable.is + "</div>" + "<div class='type'>" + variable.type + "</div>" + "<div class='name'>" + variable.name + "</div> " + "<div class = 'value'>" + variable.value + "</div>" + "<div class = 'to'>" + "" + "</div>" + "<a><img></a>" + "</div> " + "</div> ")
+
         dom.append(item)
         if (variable.is == "ptr") {
             list_pointer(item)
@@ -160,16 +145,16 @@ function refresh_globals() {
 
 function updata_frame_arg(frame, level) {
     var data = frame.func + "("
-    if (frame.arg.length) {
-        j = 0
-        for (arg of frame.arg) {
-            if (j == 0) {
-                data += arg.type + " " + arg.name + "=" + arg.value
-                j = 1
-            } else
-                data += " , " + arg.type + " " + arg.name + "=" + arg.value
-        }
-    }
+        // if (frame.arg.length) {
+        //     j = 0
+        //     for (arg of frame.arg) {
+        //         if (j == 0) {
+        //             data += arg.type + " " + arg.name + "=" + arg.value
+        //             j = 1
+        //         } else
+        //             data += " , " + arg.type + " " + arg.name + "=" + arg.value
+        //     }
+        // }
     data = data + ")"
     stack = $('#stack')
     let id = level
@@ -194,6 +179,22 @@ function updata_frame(frame, level) {
             for (let i = 0; i < frame.locals.length; i++) {
 
                 update_var(stack.children("#" + id).children(".locals"), frame.locals[i])
+            }
+        if (frame.arg)
+            for (arg of frame.arg) {
+                let type = ""
+                if (arg.type.indexOf("*") != -1)
+                    type = "ptr"
+                else if (arg.type.indexOf("[") != -1)
+                    type = "array"
+                let tmp = {
+                    "is": type,
+                    "name": arg.name,
+                    "value": arg.value,
+                    "type": arg.type,
+                    "times": 0
+                }
+                update_var(stack.children("#" + id).children(".locals"), tmp)
             }
         stack.children("#" + id).find(".unused").remove()
     } else {

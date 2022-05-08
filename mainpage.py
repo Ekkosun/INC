@@ -78,7 +78,9 @@ def upload_attachment():
     user_id = form["id"]
     file_name = form["name"]
     file_line = form["line"]
+    file_des = form["des"]
     file_path = os.path.join(current_app.config["STORE_PATH"],user_id)
+    des_path = os.path.join( file_path,file_name+file_line+".des")
     file_path =os.path.join( file_path,file_name+file_line+".asset")
     # f = open(file_path,"w")
     # f.write(f"{file_content}")
@@ -90,6 +92,7 @@ def upload_attachment():
             return redirect(request.url)
         filename = secure_filename(file.filename)
         file.save(file_path)
+        mk_write_file(des_path,file_des)
         return  '{"filename":"%s"}' % filename
     return ''
 
@@ -128,6 +131,37 @@ def send_attachment(id,file_name):
     print(file_path+file_name+".asset")
     response = make_response(send_from_directory(file_path,file_name+".asset"))
     return response
+
+@main.route("/main/ask_attachment_list",methods=['POST'])
+def send_attachment_list():
+    form = request.form
+    files = []
+    id = form["id"]
+    file_path = os.path.join(current_app.config["STORE_PATH"],id)
+    file_path = Path(file_path)
+    fs = [x for x in file_path.iterdir() if x.is_file() and x.suffix==".asset"]
+    for f in fs:
+        file_tpye = magic.from_file(f.as_posix(),mime=True)
+        pos = f.stem.find(".c")
+        if(pos==-1):
+            pos = f.stem.find(".h")
+            if(pos==-1):
+                continue
+        file_name = f.stem[0:pos+2]
+        file_line = f.stem[pos+2:]
+        rf = open(os.path.join(file_path.as_posix(),f"{file_name}{file_line}.des"),"r")
+        file_des = rf.read(204800)
+        files.append({
+            "file_name":file_name,
+            "file_line":file_line,
+            "file_type":file_tpye,
+            "file_des":file_des
+        })
+    return jsonify({
+        "list":files
+    })
+
+
 
 @websocket.on("pull_file",namespace="/gdb_listener")
 def push_file(data):

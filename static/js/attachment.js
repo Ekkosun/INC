@@ -1,13 +1,17 @@
 let attachment = {}
 let rec
 let rec_blob
+let timeout_id_attachment
 $('#attach_file').on('click', () => {
     $('#attach').css("display", "flex")
     $("#rec_audio").children("audio").remove()
-    let line = String(editor.getCursorPosition().row + 1)
-    let file = curfile
-    attachment.filename = $('#attach_code_file').val(file)
-    attachment.fileline = $('#attach_line').val(line)
+    timeout_id_attachment = setInterval(() => {
+        let line = String(editor.getCursorPosition().row + 1)
+        let file = curfile
+        attachment.filename = $('#attach_code_file').val(file)
+        attachment.fileline = $('#attach_line').val(line)
+    }, 100)
+    $('#attach_des').val("请填写对于附件的描述")
 })
 
 
@@ -17,6 +21,8 @@ $('#attach_submit').on('click', (e) => {
     $('#attach_code_file').val("")
     attachment.fileline = $('#attach_line').val()
     $('#attach_line').val("")
+    attachment.filedes = $('#attach_des').val()
+    $('#attach_des').val("")
     if ($('#attachment').val() != "") {
         uploade_attachment()
         $('#attach').css("display", "none")
@@ -26,9 +32,13 @@ $('#attach_submit').on('click', (e) => {
     } else {
         alert("请选择文件或者录音!")
     }
+    if (attachment.filedes == "") {
+        alert("请填写附件的描述")
+    }
 })
 
-$('#attach_cancle').on('click', () => {
+$('#attach_cancel').on('click', () => {
+    clearInterval(timeout_id_attachment)
     $('#attach').css("display", "none")
 })
 
@@ -40,6 +50,7 @@ function uploade_attachment() {
     form_data.append("line", attachment.fileline)
     form_data.append("id", id)
     form_data.append("file", attachment.data)
+    form_data.append("des", attachment.filedes)
     $.ajax({
         url: window.origin + '/main/upload_attachment',
         type: 'POST',
@@ -169,6 +180,7 @@ function upload_rec() {
 
     form_data.append("name", attachment.filename)
     form_data.append("line", attachment.fileline)
+    form_data.append("des", attachment.filedes)
     form_data.append("id", id)
     form_data.append("file", rec_blob, "recorder.mp3")
     $.ajax({

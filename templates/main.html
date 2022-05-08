@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" style="height: 100%;">
+<html style="height: 100%;">
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <!-- prettier-ignore -->
@@ -16,6 +16,10 @@
 <script src="static/lib/socket.io.min.js"></script>
 <script src="static/lib/xterm/lib/xterm.js"></script>
 <script src="static/lib/recorder.mp3.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js" integrity="sha256-eTyxS0rkjpLEo16uXTS0uVCS4815lc40K2iVpWDvdSY=" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+<link href="//cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
+<script src="//cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/jcubic/jquery.terminal@devel/js/jquery.terminal.min.js"></script>
 <script src="static/lib/chart.min.js"></script>
 <link href="https://cdn.jsdelivr.net/gh/jcubic/jquery.terminal@devel/css/jquery.terminal.min.css" rel="stylesheet" />
@@ -90,6 +94,7 @@
                                 <a id="learn" class="selection unselect" href="javascript:void(0)">学习示例</a>
                                 <a id="manage_public" class="selection unselect" href="javascript:void(0)">管理发布的示例</a>
                                 <a id="attach_file" class="selection unselect" href="javascript:void(0)">添加附件</a>
+                                <a id="manage_attachment" class="selection unselect" href="javascript:void(0)">管理附件</a>
                             </ul>
                         </div>
                     </div>
@@ -142,8 +147,8 @@
         </div>
     </div>
 
-    <div id="public_form" class="pop_win ">
-        <form>
+    <div id="public_form" class="pop_win ui-widget-content">
+        <form style="width: 100%; height: 100%">
             <div class="text_layout">
                 <label for="example_author" class="form-label">作者名</label>
                 <input id="example_author" type="text" class="form-control">
@@ -151,15 +156,16 @@
                 <input id="example_name" type="text" class="form-control">
                 <label for="example_description" class="form-label">简介</label>
                 <input id="example_description" type="text" class="form-control">
+
             </div>
             <div class="btn_layout">
                 <input id="confirm-public" type="button" class="btn btn-primary" value="confirm">
-                <input id="cancle-public" type="button" class="btn btn-secondary" value="cancle">
+                <input id="cancel-public" type="button" class="btn btn-secondary" value="cancel">
             </div>
         </form>
     </div>
 
-    <div id="example" class="pop_win">
+    <div id="example" class="pop_win ui-widget-content">
         <div id="example_list" class="nolength">
             <div class="example_item">
                 <div class="example_id">用户ID</div>
@@ -168,17 +174,19 @@
             </div>
         </div>
         <div class="btn_layout">
-            <input id="cancle-learn" type="button" class="btn btn-secondary" value="cancle">
+            <input id="cancel-learn" type="button" class="btn btn-secondary" value="cancel">
         </div>
     </div>
 
-    <div id="attach" class="pop_win">
-        <form>
+    <div id="attach" class="pop_win ui-widget-content">
+        <form style="width: 80%; height: 100%">
             <div class="text_layout">
                 <label for="attach_code_file" class="form-label">待添加文件名</label>
                 <input id="attach_code_file" type="text" name="filename" class="form-control">
                 <label for="attach_line" class="form-label">行号</label>
                 <input id="attach_line" type="text" name="line" class="form-control">
+                <label for="attach_des" class="form-label">描述</label>
+                <input id="attach_des" type="text" name="line" class="form-control">
                 <label for="attachment" class="form-label">附件</label>
                 <input id="attachment" type="file" accept=".txt,audio/*,video/*,image/*" class="form-control" name="file">
                 <div id="rec_audio">
@@ -188,13 +196,13 @@
             </div>
             <div class="btn_layout">
                 <input id="attach_submit" type="submit" class="btn btn-primary" alue="submit">
-                <input id="attach_cancle" type="button" class="btn btn-secondary" value="cancle">
+                <input id="attach_cancel" type="button" class="btn btn-secondary" value="cancel">
             </div>
         </form>
     </div>
 
-    <div id="manage" class="pop_win">
-        <div id="manage_list" class="nolength">
+    <div id="manage" class="pop_win ui-widget-content">
+        <div id="manage_list" class="nolength" style="width: 80%; height: 100%">
             <div class="example_item">
                 <div class="example_id">用户ID</div>
                 <div class="example_name">示例名</div>
@@ -202,7 +210,20 @@
             </div>
         </div>
         <div class="btn_layout">
-            <input id="cancle-manage" type="button" class="btn btn-secondary" value="cancle">
+            <input id="cancel-manage" type="button" class="btn btn-secondary" value="cancel">
+        </div>
+    </div>
+
+    <div id="attach_manage" class="pop_win ui-widget-content">
+        <div id="attach_list" class="nolength" style="width: 80%; height: 100%">
+            <div class="example_item">
+                <div class="example_id">文件</div>
+                <div class="example_name">行号</div>
+                <div class="example_description">简介</div>
+            </div>
+        </div>
+        <div class="btn_layout">
+            <input id="cancel-manage-attach" type="button" class="btn btn-secondary" value="cancel">
         </div>
     </div>
 
@@ -275,7 +296,9 @@
 <script src="static/js/paser.js"></script>
 <script src="static/js/state_machine.js"></script>
 <script src="static/js/socket.js"></script>
-<script src="static/js/file_tree.js"></script>=
+<script src="static/js/file_tree.js"></script>
+<script src="static/js/manage_attachment.js"></script>
+
 <script>
     Split(["#split-0", "#split-1", "#split-2"], {
         sizes: [10, 40, 50]
@@ -311,47 +334,11 @@
             list_pointer($(this))
         }
     })
-
-
-    var chart_data = {
-        labels: [],
-        datasets: [{
-            label: [],
-            backgroundColor: 'rgb(255, 99, 132)',
-            borderColor: 'rgb(255, 99, 132)',
-            data: [],
-        }]
-    }
-
-    var config = {
-        type: 'line',
-        data: chart_data,
-        options: {
-            plugins: {
-                legend: {
-                    display: false,
-                }
-            },
-            scales: {
-                y: {
-
-                    grid: {
-                        color: 'grey'
-                    }
-                },
-                x: {
-                    grid: {
-                        color: 'grey'
-                    }
-                }
-            }
-        }
-    }
-    Chart.defaults.color = '#F8F8F2';
-    const myChart = new Chart(
-        document.getElementById('myChart'),
-        config
-    )
+    $(function() {
+        $(".pop_win").draggable();
+        $(".pop_win").resizable();
+        $(".ui-resizable").css("position", "absolute")
+    });
 </script>
 
 
