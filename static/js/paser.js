@@ -3,13 +3,7 @@
 // var curlocals
 // var frames = {}
 
-map = {
-    "globals": 0,
-    "globals-values": 0,
-    "frames": 0,
-    "frames-arg": 0,
-    "locals": 0
-}
+var cmd_queue = new Map()
 
 SHOW_GLOBALS = 999
 SHOW_FRAME = 10
@@ -31,6 +25,7 @@ function response_dispatch(response) {
                     console.log(res.payload.reason)
                     if (res.payload.reason.indexOf("exited-normally") != -1) {
                         document.dispatchEvent(event(ACTION_PAUSE_EXIT))
+                        alert("程序正常退出")
                     } else if (res.payload.reason.indexOf("breakpoint-hit") != -1) {
                         set_curposition(res)
                         document.dispatchEvent(event(ACTION_PAUSE_BREAK))
@@ -121,7 +116,8 @@ function parser_global(res) {
                         "name": varname,
                         "type": vartype.substr(0, vartype.indexOf(" ")),
                         "value": varvalue,
-                        "times": 0
+                        "times": 0,
+                        "addr": null
                     })
                 } else if (is_array(vartype)) {
                     tmp = "array"
@@ -130,7 +126,8 @@ function parser_global(res) {
                         "name": varname,
                         "type": vartype.substr(0, vartype.indexOf(" ")),
                         "value": varvalue,
-                        "times": 0
+                        "times": 0,
+                        "addr": null
                     })
                 } else {
                     program.globals.push({
@@ -138,7 +135,8 @@ function parser_global(res) {
                         "name": varname,
                         "type": vartype,
                         "value": varvalue,
-                        "times": 0
+                        "times": 0,
+                        "addr": null
                     })
                 }
                 program.globalcmd.push(1000 + i + "-data-evaluate-expression " + "'" + filename + "'" + "::" + varname)
@@ -153,11 +151,12 @@ function get_globals_value() {
         "id": id,
         "cmd": program.globalcmd,
     })
+
 }
 
 function set_globals_value(res) {
     let index = res.token
-    program.globals[index - 1000].value = res.payload.value
+    program.globals[index - 1000].value = res.payload.value.split(" <")[0]
         // document.dispatchEvent(refresh())
 }
 
@@ -166,7 +165,10 @@ function set_globals_addr(res) {
         program.map = new Map()
     }
     program.map.set(res.payload.value, program.globals[res.token - SHOW_GLOBAL_ADD].name)
-        // refresh_globals()
+    if (!program.globals[res.token - SHOW_GLOBAL_ADD].addr && res.payload.value) {
+        program.globals[res.token - SHOW_GLOBAL_ADD].addr = res.payload.value.split(" ")[0]
+    }
+    // refresh_globals()
 }
 
 function get_frame() {
@@ -217,7 +219,7 @@ function parser_frame(res) {
                 "func": func,
                 "arg": arg,
                 "line": line,
-                "local": []
+                "locals": []
             }
         }
     }
@@ -326,8 +328,8 @@ function parser_local_addr(res) {
     if (!program.frames[String(frame)])
         return
     let name = program.frames[String(frame)].locals[index].name
-    if (!program.frames[String(frame)].locals[index].addr) {
-        program.frames[String(frame)].locals[index].addr = res.payload.value
+    if (!program.frames[String(frame)].locals[index].addr && res.payload.value) {
+        program.frames[String(frame)].locals[index].addr = res.payload.value.split(" ")[0]
     }
     if (res.payload.value)
         if (program.frames[String(frame)].map) {
@@ -346,6 +348,7 @@ function parser_local_addr(res) {
             program.frames[String(frame)].map.set(res.payload.value, name)
         }
         // updata_frame(program.frames[String(frame)], String(frame))
+
 }
 
 
@@ -361,6 +364,8 @@ function get_addr(variable, frame) {
         return null
     }
 }
+
+
 
 function set_break_point(res) {
 
