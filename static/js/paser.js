@@ -181,11 +181,11 @@ function set_globals_addr(res) {
 
 function get_frame() {
     socket.emit("run_gdb_command", {
-        "id": id,
-        "cmd": ["10-stack-list-frames", "11-stack-list-arguments --no-frame-filters --simple-values"],
-    })
-    cmd_queue.set("10", ["10-stack-list-frames"])
-    cmd_queue.set("11", ["11-stack-list-arguments --no-frame-filters --simple-values"])
+            "id": id,
+            "cmd": ["10-stack-list-frames", "11-stack-list-arguments --no-frame-filters --simple-values"],
+        })
+        // cmd_queue.set("10", ["10-stack-list-frames"])
+        // cmd_queue.set("11", ["11-stack-list-arguments --no-frame-filters --simple-values"])
 }
 
 function get_locals() {

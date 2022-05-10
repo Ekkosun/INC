@@ -13,6 +13,7 @@
     left: -5px;
     width: 25px;
     filter: brightness(500%);
+    z-index: 50000;
 }
 
 #more-func {

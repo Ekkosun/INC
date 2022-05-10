@@ -17,11 +17,11 @@ function list_item(item, open) {
             list.append(item_tmp)
         }
         item.append(list)
-        item.children(".menu").addClass("havelist")
         item.children("ul").css("display", "none")
+        item.children(".menu").addClass("havelist")
 
     } else {
-        if (open)
+        if (open == true)
             if (item.children("ul").css("display") == "none") {
                 item.find("img").attr("src", "static/icon/collapse-all.svg")
                 item.children("ul").css("display", "block")
@@ -40,16 +40,16 @@ function create_frame(func, id) {
     </div>\
     </div>")
     $('#stack').append(frame)
-    frame.children(".locals").on('dblclick', ".item", function() {
-        let data = $(this).find('.ptrorarray').text()
-        if ($(this).find('.ptrorarray').text() == "") {
-            return
-        } else if ($(this).find('.ptrorarray').first().text() == "array") {
-            list_item($(this), true)
-        } else if ($(this).find('.ptrorarray').first().text() == "ptr") {
-            list_pointer($(this))
-        }
-    })
+        // frame.children(".locals").on('dblclick', ".item", function() {
+        //     let data = $(this).find('.ptrorarray').text()
+        //     if ($(this).find('.ptrorarray').text() == "") {
+        //         return
+        //     } else if ($(this).find('.ptrorarray').first().text() == "array") {
+        //         list_item($(this), true)
+        //     } else if ($(this).find('.ptrorarray').first().text() == "ptr") {
+        //         list_pointer($(this))
+        //     }
+        // })
 }
 
 
@@ -144,7 +144,6 @@ function update_var(dom, variable) {
                 for (let res of result[1])
                     data = data + res + ", "
                 data = data.substring(0, data.length - 2) + "}"
-                console.log(data)
                 dom.children("#" + variable.addr).find('.value').first().html(data)
                     // dom.children("#" + variable.addr).children('.menu').addClass("change")
                 dom.children("#" + variable.addr).removeClass("unused")
@@ -153,8 +152,22 @@ function update_var(dom, variable) {
                     // dom.children("#" + variable.addr).children('.menu').removeClass("change")
                 dom.children("#" + variable.addr).removeClass("unused")
             }
-            list_item(dom.children("#" + variable.addr), false)
-                // dom.children("#" + variable.addr).children('.menu').removeClass("change")
+            // setTimeout(() => {
+
+            //     dom.children("#" + variable.addr).find("img").attr("src", "static/icon/expand-all.svg")
+            //     list_item(item, false)
+            //     dom.children("#" + variable.addr).find("img").off()
+            //     dom.children("#" + variable.addr).find("img").on("click", () => {
+            //         list_item(dom.children("#" + variable.addr), true)
+            //     })
+            //     dom.children("#" + variable.addr).on("dblclick", () => {
+            //         list_item(dom.children("#" + variable.addr), true)
+            //     })
+            // }, 500)
+            updata_list(dom.children("#" + variable.addr))
+
+            // list_item(dom.children("#" + variable.addr), false)
+            // dom.children("#" + variable.addr).children('.menu').removeClass("change")
         } else {
             let value = dom.children("#" + variable.addr).find('.value').first().text()
             if (value != variable.value) {
@@ -166,8 +179,7 @@ function update_var(dom, variable) {
                 dom.children("#" + variable.addr).removeClass("unused")
             }
         }
-        // if (dom.children("#" + variable.name+i).children(".item_list").length > 0)
-        updata_list(dom.children("#" + variable.addr))
+        // if (dom.children("#" + variable.name+i).children(".item_list").length 
 
     } else {
         let item = $("<div " + "id=" + variable.addr + " class='item'>" + "<div class='menu unselect'>" + "<div class='ptrorarray'>" + variable.is + "</div>" + "<div class='type'>" + variable.type + "</div>" + "<div class='name'>" + variable.name + "</div> " + "<div class = 'value'>" + variable.value + "</div>" + "<div class = 'to'>" + "" + "</div>" + "<a><img></a>" + "</div> " + "</div> ")
@@ -177,13 +189,16 @@ function update_var(dom, variable) {
             list_pointer(item)
         } else if (variable.is == "array") {
             item.find("img").attr("src", "static/icon/expand-all.svg")
-            item.find("img").attr("id", "collapse")
+            list_item(item, false)
             item.find("img").off()
             item.find("img").on("click", () => {
                 list_item(item, true)
             })
-            list_item(item, false)
+            item.on("dblclick", () => {
+                list_item(item, true)
+            })
         }
+
         // item.children(".menu").addClass("change")
     }
 }
@@ -264,6 +279,20 @@ function updata_frame(frame, level) {
                 return -1
         })
         stack.children("#" + id).children(".locals").html(domlist)
+        for (let i = 0; i < domlist.length; i++) {
+            if ($(domlist[i]).find(".ptrorarray").text() == "array") {
+                let item = $(domlist[i])
+                item.find("img").attr("src", "static/icon/expand-all.svg")
+                list_item(item, false)
+                item.find("img").off()
+                item.find("img").on("click", () => {
+                    list_item(item, true)
+                })
+                item.on("dblclick", () => {
+                    list_item(item, true)
+                })
+            }
+        }
     } else {
         if (frame)
             if (frame.locals)
@@ -280,6 +309,20 @@ function updata_frame(frame, level) {
                 return -1
         })
         stack.children("#" + id).children(".locals").html(domlist)
+        for (let i = 0; i < domlist.length; i++) {
+            if ($(domlist[i]).find(".ptrorarray").text() == "array") {
+                let item = $(domlist[i])
+                item.find("img").attr("src", "static/icon/expand-all.svg")
+                list_item(item, false)
+                item.find("img").off()
+                item.find("img").on("click", () => {
+                    list_item(item, true)
+                })
+                item.on("dblclick", () => {
+                    list_item(item, true)
+                })
+            }
+        }
     }
     if (stack.children("#" + id).find(".change").length > 0)
         stack.children("#" + id).children(".tag").addClass("change")
@@ -440,9 +483,11 @@ function list_pointer(dom) {
         }
         dom.children(".menu").find(".to").text("=>" + to)
         dom.children(".menu").css("color", "black")
+
     } else {
         dom.children(".menu").css("background-color", "yellow")
         dom.children(".menu").find(".to").text("野指针")
+        dom.children(".menu").css("color", "black")
     }
     // $("#" + item).children(".menu").css("background-color", "blue")
 
@@ -552,7 +597,7 @@ function sort_locals() {
     for (let id = 0; id < program.framenum; id++) {
         let domlist = stack.children("#" + id).children(".locals").children(".item").get()
         let sorted = true
-        for (let i = 0; i < domlist.length; i++) {
+        for (let i = 0; i < domlist.length - 1; i++) {
             if (domlist[i] < domlist[i + 1]) {
                 sorted = false
                 break
@@ -568,6 +613,20 @@ function sort_locals() {
                     return -1
             })
             stack.children("#" + id).children(".locals").html(domlist)
+            for (let i = 0; i < domlist.length; i++) {
+                if ($(domlist[i]).find(".ptrorarray").text() == "array") {
+                    let item = $(domlist[i])
+                    item.find("img").attr("src", "static/icon/expand-all.svg")
+                    list_item(item, false)
+                    item.find("img").off()
+                    item.find("img").on("click", () => {
+                        list_item(item, true)
+                    })
+                    item.on("dblclick", () => {
+                        list_item(item, true)
+                    })
+                }
+            }
         }
     }
 }

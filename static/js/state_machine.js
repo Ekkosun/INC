@@ -174,7 +174,7 @@ function pause_handler() {
     $(".point").removeClass("point")
     program.localnum = 0
     let value = editor.session.getLine(program.curline - 1)
-    if (value.indexOf("main()") != -1 || value.indexOf("{") != -1 || value.indexOf("}") != -1) {
+    if (value.indexOf("main()") != -1 || (value.indexOf("{") != -1 && value.indexOf("=") == -1) || (value.indexOf("{") != -1 && value.indexOf("=") == -1)) {
         next_line()
     }
     if (value.indexOf("=") != -1) {
