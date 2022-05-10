@@ -52,7 +52,7 @@ socket.on("compile", (data) => {
         socket.emit("run_gdb_command", {
             "id": id,
             "cmd": ["0-file-exec-and-symbols ./a.o",
-                "999-symbol-info-variables ",
+                "999-symbol-info-variables --include-nondebug ",
                 "0-file-exec-and-symbols ./a.out",
             ]
         })
@@ -109,6 +109,11 @@ stop.addEventListener('click', (e) => {
     document.dispatchEvent(event(ACTION_EXIT))
 })
 
+var run_cursor = document.getElementById("control-run-cursor")
+run_cursor.addEventListener('click', (e) => {
+    e.preventDefault()
+    document.dispatchEvent(event(ACTION_RUN_CURSOR))
+})
 
 function PullFile(file_path) {
     for (v of file_path) {
@@ -130,7 +135,7 @@ socket.on("gdb_response", (data) => {
 
 socket.on("program_pty_response", (data) => {
     let len = data.length
-    console.log(data)
+        // console.log(data)
     if (data[len - 1] == '\n') {
         data = data.substr(0, data.length - 1);
         $('#terminal').terminal().echo(data)

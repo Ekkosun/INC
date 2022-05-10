@@ -40,17 +40,24 @@ function response_dispatch(response) {
             }
         } else if (res.token >= SHOW_LOCAL_TYPE && res.token < 500) {
             parser_local(res)
+            cmd_queue.delete(String(res.token))
 
 
         } else if (res.token >= SHOW_LOCAL_VAR && res.token < 2 * SHOW_LOCAL_VAR) {
             set_locals_value(res)
+            cmd_queue.delete(String(res.token))
+
 
         } else if (res.token >= 1000 && res.token < 5000) {
             set_globals_value(res)
+            cmd_queue.delete(String(res.token))
+
         } else if (res.token >= SHOW_GLOBAL_ADD && res.token < 2 * SHOW_GLOBAL_ADD) {
             set_globals_addr(res)
         } else if (res.token >= ADDR) {
-            parser_local_addr(res);
+            parser_local_addr(res)
+            cmd_queue.delete(String(res.token))
+
         } else if (res.type == "result") {
             switch (res.token) {
                 case SHOW_GLOBALS:
@@ -63,6 +70,7 @@ function response_dispatch(response) {
                     parser_frame_arg(res)
                     break
             }
+            cmd_queue.delete(String(res.token))
         }
     }
 }
@@ -176,6 +184,8 @@ function get_frame() {
         "id": id,
         "cmd": ["10-stack-list-frames", "11-stack-list-arguments --no-frame-filters --simple-values"],
     })
+    cmd_queue.set("10", ["10-stack-list-frames"])
+    cmd_queue.set("11", ["11-stack-list-arguments --no-frame-filters --simple-values"])
 }
 
 function get_locals() {
@@ -183,6 +193,7 @@ function get_locals() {
     for (i = 0; i < program.framenum; i++) {
         // localcmd.push((i + 12) + "-stack-list-locals --thread 1 --frame " + i + " --all-values")
         localcmd.push((i + 12) + "-stack-list-locals --thread 1 --frame " + i + " --simple-values")
+        cmd_queue.set(String(i + 12), [(i + 12) + "-stack-list-locals --thread 1 --frame " + i + " --simple-values"])
     }
     socket.emit("run_gdb_command", {
         "id": id,
@@ -301,7 +312,25 @@ function parser_local(res) {
         "id": id,
         "cmd": [(res.token - SHOW_LOCAL_TYPE + SHOW_LOCAL_VAR) + "-stack-list-locals --thread 1 --frame " + (res.token - SHOW_LOCAL_TYPE) + " --all-values"]
     })
+    cmd_queue.set(String((res.token - SHOW_LOCAL_TYPE + SHOW_LOCAL_VAR)), [(res.token - SHOW_LOCAL_TYPE + SHOW_LOCAL_VAR) + "-stack-list-locals --thread 1 --frame " + (res.token - SHOW_LOCAL_TYPE) + " --all-values"])
     get_var_addr(String(res.token - SHOW_LOCAL_TYPE))
+}
+
+function get_var_addr(frame) {
+    let n = parseInt(frame)
+    let framen = String(program.framenum - 1 - n)
+    if (!program.frames[frame])
+        return
+    let locals = program.frames[framen].locals
+    if (locals) {
+        for (let i = 0; i < locals.length; i++) {
+            socket.emit("run_gdb_command", {
+                "id": id,
+                "cmd": ["-stack-select-frame " + frame, ((n + 1) * ADDR + i) + "-data-evaluate-expression &" + locals[i].name]
+            })
+            cmd_queue.set(String(((n + 1) * ADDR + i)), ["-stack-select-frame " + frame, ((n + 1) * ADDR + i) + "-data-evaluate-expression &" + locals[i].name])
+        }
+    }
 }
 
 function set_locals_value(res) {
@@ -310,7 +339,7 @@ function set_locals_value(res) {
         return
     for (let i = res.payload.locals.length - 1; i >= 0; i--) {
         if (res.payload.locals[i].value)
-            program.frames[String(framen)].locals[i].value = res.payload.locals[i].value
+            program.frames[String(framen)].locals[i].value = res.payload.locals[i].value.split(" <")[0]
     }
 }
 

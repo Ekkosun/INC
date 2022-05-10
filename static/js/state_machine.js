@@ -10,12 +10,17 @@ function state_machine(e) {
     let action = e.detail
     switch (state_var) {
         case STATE_EDIT:
-            if (action != ACTION_COMPILE) {
-                alert("请先进行文件的保存和编译！")
-                break
+            if (action == ACTION_COMPILE) {
+                compile_load()
+                state_var = STATE_PRELOAD
+            } else if (action == ACTION_START) {
+                start_run()
+                state_var = STATE_RUN
+            } else if (action == ACTION_CONTINUE || action == ACTION_NEXT || action == ACTION_STEPIN || action == ACTION_STEPOUT || action == ACTION_RUN_CURSOR) {
+                alert("请先运行程序!")
+            } else {
+
             }
-            compile_load()
-            state_var = STATE_PRELOAD
             break
 
         case STATE_PRELOAD:
@@ -32,6 +37,8 @@ function state_machine(e) {
                 state_var = STATE_EDIT
             else if (action == ACTION_COMPILE) {
                 compile_load()
+            } else if (action == ACTION_CONTINUE || action == ACTION_NEXT || action == ACTION_STEPIN || action == ACTION_STEPOUT || action == ACTION_RUN_CURSOR) {
+                alert("请先运行程序!")
             }
             break
 
@@ -87,6 +94,9 @@ function state_machine(e) {
                 iscontinue = 0
                 state_var = STATE_PAUSE
                 window.clearTimeout(timeoutid)
+            } else if (action == ACTION_RUN_CURSOR) {
+                run_to_cursor()
+                state_var = STATE_RUN
             }
 
             break
@@ -153,24 +163,51 @@ function start_run() {
     $("#show_attachment").css("display", "block")
 }
 
+function sleep(time) {
+    return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+
 
 function pause_handler() {
     $(".change").removeClass("change")
     $(".point").removeClass("point")
+    program.localnum = 0
+    let value = editor.session.getLine(program.curline - 1)
+    if (value.indexOf("main()") != -1 || value.indexOf("{") != -1 || value.indexOf("}") != -1) {
+        next_line()
+    }
+    if (value.indexOf("=") != -1) {
+        let variable = value.split(" ")[1]
+        console.log(variable + "=")
+    }
     get_globals_value()
     get_frame()
-    refresh_buff()
-
-    setTimeout(() => {
-        if (state_var == STATE_PAUSE) {
-            refresh_globals()
-            refresh_editor()
-            refresh_stack()
-            if_have_attachment(program.curfile, program.curline)
-            for (let i = 0; i < program.framenum; i++)
-                updata_frame(program.frames[String(i)], String(i))
+    refresh_buff() //TODO: jiejue le shen me wen ti
+    let interval = setInterval(() => {
+        if (cmd_queue.size > 0) {
+            for (let [k, v] of cmd_queue) {
+                socket.emit("run_gdb_command", {
+                    "id": id,
+                    "cmd": v
+                })
+                break
+            }
+        } else {
+            setTimeout(() => {
+                if (state_var == STATE_PAUSE) {
+                    refresh_globals()
+                    refresh_editor()
+                    refresh_stack()
+                    if_have_attachment(program.curfile, program.curline)
+                    for (let i = 0; i < program.framenum; i++)
+                        updata_frame(program.frames[String(i)], String(i))
+                }
+            }, 1000)
+            clearInterval(interval)
         }
-    }, 1000)
+    }, 100)
+
 }
 
 
@@ -226,6 +263,15 @@ function step_in() {
 
 }
 
+function run_to_cursor() {
+    let file = curfile
+    let line = editor.getCursorPosition().row + 1
+    cmd = ["-exec-until " + file + ":" + line]
+    socket.emit("run_gdb_command", {
+        "id": id,
+        "cmd": cmd
+    })
+}
 
 function step_out() {
     set_break()
@@ -277,30 +323,13 @@ function get_all_rsp_rbp() {
     }
 }
 
-function get_var_addr(frame) {
-    let n = parseInt(frame)
-    let framen = String(program.framenum - 1 - n)
-    if (!program.frames[frame])
-        return
-    let locals = program.frames[framen].locals
-    if (locals) {
-        for (let i = 0; i < locals.length; i++) {
-            socket.emit("run_gdb_command", {
-                "id": id,
-                "cmd": ["-stack-select-frame " + frame, ((n + 1) * ADDR + i) + "-data-evaluate-expression &" + locals[i].name]
-            })
-        }
-    }
-}
+
 
 function clear_program_status() {
-    program = {
-        "globalcmd": [],
-        "curfile": null,
-        "curline": null,
-        "frames": {},
-        "framenum": 0
-    }
+    program.curfile = null
+    program.curline = null
+    program.frames = {}
+    program.framenum = 0
 }
 
 function refresh_buff() {

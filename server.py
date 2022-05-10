@@ -263,7 +263,7 @@ def compile_handler(data):
         if x.is_file() and (x.suffix == ".out" or x.suffix==".o"):
             os.remove(x.as_posix())
     os.chdir(path)
-    cmd = f"gcc -g -c *.c "
+    cmd = f"gcc  -fno-stack-protector -g -c *.c "
     cmd += f"2>out 1>/dev/null"
     print(cmd)
     os.system(cmd)
@@ -277,7 +277,7 @@ def compile_handler(data):
         })
         return 
     
-    cmd = "ld -r  *.o -o a.o"
+    cmd = "ld -r  *.o -o a.o "
     cmd += f" 2>out 1>/dev/null"
     os.system(cmd)
     f = open(f"out", "r")
@@ -290,7 +290,7 @@ def compile_handler(data):
         })
         return 
 
-    cmd = "gcc -g a.o "
+    cmd = "gcc -g -fno-stack-protector a.o "
     cmd += f"2>out 1>/dev/null"
     os.system(cmd)
     f = open(f"out", "r")

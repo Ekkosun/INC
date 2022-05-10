@@ -1,6 +1,38 @@
 var stack = document.getElementById("stack")
 
 
+function list_item(item, open) {
+    let data = item.find('.value').first().text()
+    let type = item.find('.type').first().text()
+    let addr = item.attr("id")
+    let element_size = SIZE_MAP.get(type)
+    data = parser_array(data, type)
+    let name = item.find('.name').text()
+    if (item.children("ul").length <= 0) {
+        list = $("<ul class='item_list'></ul>")
+        for (i = 0; i < data.length; i++) {
+            let id = element_size * (i) + parseInt(addr)
+            id = "0x" + id.toString(16)
+            let item_tmp = $("<li class='menu unselect' id='" + id + "'>" + "<div  class='name'>" + name + "[" + i + "]" + "</div>" + "<div class='value'>" + data[i] + "</div>" + "</div>")
+            list.append(item_tmp)
+        }
+        item.append(list)
+        item.children(".menu").addClass("havelist")
+        item.children("ul").css("display", "none")
+
+    } else {
+        if (open)
+            if (item.children("ul").css("display") == "none") {
+                item.find("img").attr("src", "static/icon/collapse-all.svg")
+                item.children("ul").css("display", "block")
+
+            } else {
+                item.find("img").attr("src", "static/icon/expand-all.svg")
+                item.children("ul").css("display", "none")
+            }
+    }
+}
+
 function create_frame(func, id) {
     let frame = $("<div class='cards shadow-1' id=" + id + " >\
         <div class='tag unselect nolength'>" + func + "<a><img></a>" + "</div>\
@@ -13,49 +45,13 @@ function create_frame(func, id) {
         if ($(this).find('.ptrorarray').text() == "") {
             return
         } else if ($(this).find('.ptrorarray').first().text() == "array") {
-            list_item($(this))
+            list_item($(this), true)
         } else if ($(this).find('.ptrorarray').first().text() == "ptr") {
             list_pointer($(this))
         }
     })
 }
 
-
-function list_item(item) {
-    let data = item.find('.value').first().text()
-    let type = item.find('.type').first().text()
-    data = parser_array(data, type)
-    let name = item.find('.name').text()
-    if (item.children("ul").length <= 0) {
-        list = $("<ul class='item_list'></ul>")
-        for (i = 0; i < data.length; i++) {
-            let list_item = $("<li class='menu unselect'><div class='ptrorarray'>" + name + "[" + i + "]" + "</div>" + "<div class='value'>" + data[i] + "</div>" + "</div>")
-            list.append(list_item)
-        }
-        item.append(list)
-        item.children(".menu").addClass("havelist")
-        item.children("ul").css("display", "none")
-
-    } else {
-        if (item.children("ul").css("display") == "none") {
-            item.find("img").attr("src", "static/icon/collapse-all.svg")
-            $("#chart_dis").css("display", "flex")
-            $("#chart_dis").css("width", "50%")
-            $('#memo_dis').css("width", "50%")
-            item.children("ul").css("display", "block")
-            $("#split-2").css("display", "flex")
-            $("#split-2").css("flex-direction", "row")
-
-        } else {
-            item.find("img").attr("src", "static/icon/expand-all.svg")
-            $("#chart_dis").css("display", "none")
-            $('#memo_dis').css("width", "100%")
-            $("#split-2").css("display", "block")
-            item.children("ul").css("display", "none")
-        }
-    }
-
-}
 
 function updata_list(item) {
     let data = item.find('.value').first().text()
@@ -74,50 +70,107 @@ function updata_list(item) {
     }
 }
 
+function startCompare(a, b, type) {
+
+    var result = highlight(parser_array(a, type), parser_array(b, type));
+    return result;
+}
+
+function distinct(arr) {
+    var obj = {};
+    var result = [];
+    for (i = 0; i < arr.length; i++) {
+        if (!obj[arr[i]]) {
+            obj[arr[i]] = 1;
+            result.push(arr[i]);
+        }
+    }
+    return result;
+};
+
+function highlight() {
+    var params = Array.prototype.slice.call(arguments);
+    var result = params.map(function(e) {
+        // e = e.toUpperCase();
+        // e = e.replace(
+        //     /[\ |\~|\`|\!|\@|\#|\$|\%|\^|\&|\*|\(|\)|\-|\_|\+|\=|\||\\|\[|\]|\{|\}|\;|\:|\"|\'|\,|\<|\.|\>|\/|\?]/g,
+        //     "");
+        return e //.split("");
+    });
+    var maxLen = eval(" Math.max(" + result.map(function(e) {
+        return e.length
+    }).join(",") + ")");
+    result.forEach(function(e) {
+        if (e.length < maxLen) {
+            e.length = maxLen;
+        };
+    });
+    var index = [];
+    for (var i = 0; i < result[0].length; i++) {
+        if (result[0][i] === result[1][i]) {
+            continue;
+        } else {
+            index.push(i);
+        }
+    };
+
+    index.forEach(function(e) {
+        result[0][e] = "<span class='red'>" + (result[0][e] ? result[0][e] : "") + "</span>"
+        result[1][e] = "<span class='red'>" + (result[1][e] ? result[1][e] : "") + "</span>"
+    });
+    return result
+}
+
 function update_var(dom, variable) {
-    let id = variable.name + variable.times
-    if (dom.children("#" + variable.name + variable.times).length > 0) {
-        if (dom.children("#" + variable.name + variable.times).find('.ptrorarray').text() == "ptr") {
-            let value = dom.children("#" + variable.name + variable.times).find('.value').first().text()
+    if (dom.children("#" + variable.addr).length > 0) {
+        if (dom.children("#" + variable.addr).find('.ptrorarray').text() == "ptr") {
+            let value = dom.children("#" + variable.addr).find('.value').first().text()
             if (value != variable.value) {
-                dom.children("#" + variable.name + variable.times).find('.value').first().text(variable.value)
-                dom.children("#" + variable.name + variable.times).children('.menu').addClass("change")
-                dom.children("#" + variable.name + variable.times).removeClass("unused")
+                dom.children("#" + variable.addr).find('.value').first().text(variable.value)
+                dom.children("#" + variable.addr).children('.menu').addClass("change")
+                dom.children("#" + variable.addr).removeClass("unused")
 
             } else {
                 // dom.children("#" + variable.name + variable.times).children('.menu').removeClass("change")
-                dom.children("#" + variable.name + variable.times).removeClass("unused")
+                dom.children("#" + variable.addr).removeClass("unused")
             }
-            list_pointer(dom.children("#" + variable.name + variable.times))
-                // dom.children("#" + variable.name + variable.times).children('.menu').removeClass("change")
-        } else if (dom.children("#" + variable.name + variable.times).find('.ptrorarray').text() == "array") {
-            let value = dom.children("#" + variable.name + variable.times).find('.value').first().text()
+            list_pointer(dom.children("#" + variable.addr))
+                // dom.children("#" + variable.addr).children('.menu').removeClass("change")
+        } else if (dom.children("#" + variable.addr).find('.ptrorarray').text() == "array") {
+            let value = dom.children("#" + variable.addr).find('.value').first().text()
             if (value != variable.value) {
-                dom.children("#" + variable.name + variable.times).find('.value').first().text(variable.value)
-                dom.children("#" + variable.name + variable.times).children('.menu').addClass("change")
-                dom.children("#" + variable.name + variable.times).removeClass("unused")
+                let result = startCompare(value, variable.value, variable.type)
+                let data = "{"
+                for (let res of result[1])
+                    data = data + res + ", "
+                data = data.substring(0, data.length - 2) + "}"
+                console.log(data)
+                dom.children("#" + variable.addr).find('.value').first().html(data)
+                    // dom.children("#" + variable.addr).children('.menu').addClass("change")
+                dom.children("#" + variable.addr).removeClass("unused")
             } else {
-                // dom.children("#" + variable.name + variable.times).children('.menu').removeClass("change")
-                dom.children("#" + variable.name + variable.times).removeClass("unused")
+                dom.children("#" + variable.addr).find('.value').first().html(value)
+                    // dom.children("#" + variable.addr).children('.menu').removeClass("change")
+                dom.children("#" + variable.addr).removeClass("unused")
             }
-            list_item(dom.children("#" + variable.name + variable.times))
-                // dom.children("#" + variable.name + variable.times).children('.menu').removeClass("change")
+            list_item(dom.children("#" + variable.addr), false)
+                // dom.children("#" + variable.addr).children('.menu').removeClass("change")
         } else {
-            let value = dom.children("#" + variable.name + variable.times).find('.value').first().text()
+            let value = dom.children("#" + variable.addr).find('.value').first().text()
             if (value != variable.value) {
-                dom.children("#" + variable.name + variable.times).find('.value').first().text(variable.value)
-                dom.children("#" + variable.name + variable.times).children('.menu').addClass("change")
-                dom.children("#" + variable.name + variable.times).removeClass("unused")
+                dom.children("#" + variable.addr).find('.value').first().text(variable.value)
+                dom.children("#" + variable.addr).children('.menu').addClass("change")
+                dom.children("#" + variable.addr).removeClass("unused")
             } else {
-                // dom.children("#" + variable.name + variable.times).children('.menu').removeClass("change")
-                dom.children("#" + variable.name + variable.times).removeClass("unused")
+                // dom.children("#" + variable.addr).children('.menu').removeClass("change")
+                dom.children("#" + variable.addr).removeClass("unused")
             }
         }
         // if (dom.children("#" + variable.name+i).children(".item_list").length > 0)
-        updata_list(dom.children("#" + variable.name + variable.times))
+        updata_list(dom.children("#" + variable.addr))
 
     } else {
-        let item = $("<div " + "id=" + variable.name + variable.times + " class='item'>" + "<div class='menu unselect'>" + "<div class='ptrorarray'>" + variable.is + "</div>" + "<div class='type'>" + variable.type + "</div>" + "<div class='name'>" + variable.name + "</div> " + "<div class = 'value'>" + variable.value + "</div>" + "<div class = 'to'>" + "" + "</div>" + "<a><img></a>" + "</div> " + "</div> ")
+        let item = $("<div " + "id=" + variable.addr + " class='item'>" + "<div class='menu unselect'>" + "<div class='ptrorarray'>" + variable.is + "</div>" + "<div class='type'>" + variable.type + "</div>" + "<div class='name'>" + variable.name + "</div> " + "<div class = 'value'>" + variable.value + "</div>" + "<div class = 'to'>" + "" + "</div>" + "<a><img></a>" + "</div> " + "</div> ")
 
         dom.append(item)
         if (variable.is == "ptr") {
@@ -127,9 +180,9 @@ function update_var(dom, variable) {
             item.find("img").attr("id", "collapse")
             item.find("img").off()
             item.find("img").on("click", () => {
-                list_item(item)
+                list_item(item, true)
             })
-            list_item(item)
+            list_item(item, false)
         }
         // item.children(".menu").addClass("change")
     }
@@ -181,8 +234,9 @@ function updata_frame(frame, level) {
                 update_var(stack.children("#" + id).children(".locals"), frame.locals[i])
             }
         if (frame.arg)
-            for (arg of frame.arg) {
+            for (let i = frame.arg.length - 1; i >= 0; i--) {
                 let type = ""
+                let arg = frame.arg[i]
                 if (arg.type.indexOf("*") != -1)
                     type = "ptr"
                 else if (arg.type.indexOf("[") != -1)
@@ -190,19 +244,42 @@ function updata_frame(frame, level) {
                 let tmp = {
                     "is": type,
                     "name": arg.name,
-                    "value": arg.value,
-                    "type": arg.type,
-                    "times": 0
+                    "value": arg.value.split(" <")[0],
+                    "type": arg.type.split(" *")[0],
+                    "times": 0,
+                    "addr": "0y" + i + arg.name
                 }
+
                 update_var(stack.children("#" + id).children(".locals"), tmp)
             }
         stack.children("#" + id).find(".unused").remove()
+
+        let domlist = stack.children("#" + id).children(".locals").children(".item").get()
+        domlist.sort(function(a, b) {
+            var a_v = $(a).attr("id")
+            var b_v = $(b).attr("id")
+            if (a_v > b_v)
+                return 1
+            else
+                return -1
+        })
+        stack.children("#" + id).children(".locals").html(domlist)
     } else {
         if (frame)
             if (frame.locals)
                 for (let i = 0; i < frame.locals.length; i++) {
                     update_var(stack.children("#" + id).children(".locals"), frame.locals[i])
                 }
+        let domlist = stack.children("#" + id).children(".locals").children(".item").get()
+        domlist.sort(function(a, b) {
+            var a_v = $(a).attr("id")
+            var b_v = $(b).attr("id")
+            if (a_v > b_v)
+                return 1
+            else
+                return -1
+        })
+        stack.children("#" + id).children(".locals").html(domlist)
     }
     if (stack.children("#" + id).find(".change").length > 0)
         stack.children("#" + id).children(".tag").addClass("change")
@@ -311,6 +388,24 @@ function randomColor() {
 function list_pointer(dom) {
     let ptr = dom.children(".menu").find(".value").text()
     let domid = dom.attr('id')
+    for (let [k, v] of point_color) {
+        for (let i in v[1]) {
+            if (v[1][i] == domid && ptr != k) {
+                v[1].splice(i, 1)
+                point_color.set(k, v)
+                if ($("#" + k).length > 0) {
+                    let to = $("#" + k).find(".name")
+                    if (to.length > 1) {
+                        to = $("#" + k).find("#" + k).find(".name").text()
+                        $("#" + k).find("#" + k).css("background-color", "#888a90")
+                    } else {
+                        $("#" + k).children(".menu").css("background-color", "#888a90")
+                        to = $("#" + k).find(".name").text()
+                    }
+                }
+            }
+        }
+    }
     if (ptr == "0x0") {
         dom.children(".menu").find(".to").text("NULL")
         dom.children(".menu").css("background-color", "green")
@@ -318,29 +413,38 @@ function list_pointer(dom) {
         return
     }
     let type = dom.children(".menu").find(".type").text()
-    let [val, item] = check_global_addr(ptr, type)
-    if (!val) {
-        [val, item] = check_local_addr(ptr, type)
-    }
-    if (!val) {
-        dom.children(".menu").find(".to").text("wild pointer")
-        dom.children(".menu").css("background-color", "yellow")
+
+    if ($("#" + ptr).length > 0) {
+        if (!point_color.has(ptr)) {
+            let color = randomColor()
+            point_color.set(ptr, [color, []])
+        }
+        dom.children(".menu").css("background-color", point_color.get(ptr)[0])
+        let have = false
+        for (let v of point_color.get(ptr)[1]) {
+            if (v == domid)
+                have = true
+
+        }
+        if (!have)
+            point_color.get(ptr)[1].push(domid)
+
+        dom.children(".menu").addClass("point")
+        let to = $("#" + ptr).find(".name")
+        if (to.length > 1) {
+            to = $("#" + ptr).find("#" + ptr).find(".name").text()
+            $("#" + ptr).find("#" + ptr).css("background-color", point_color.get(ptr)[0])
+        } else {
+            $("#" + ptr).children(".menu").css("background-color", point_color.get(ptr)[0])
+            to = $("#" + ptr).find(".name").text()
+        }
+        dom.children(".menu").find(".to").text("=>" + to)
         dom.children(".menu").css("color", "black")
     } else {
-
-        if (!point_color.has(domid)) {
-            let color = randomColor()
-            point_color.set(domid, [color, item])
-        }
-        dom.children(".menu").css("background-color", point_color.get(domid)[0])
-        let last = point_color.get(domid)[1]
-        $("#" + last).children(".menu").css("background-color", "#888a90")
-        $("#" + item).children(".menu").css("background-color", point_color.get(domid)[0])
-        dom.children(".menu").addClass("point")
-        dom.children(".menu").find(".to").text("&" + escape(val))
-        dom.children(".menu").css("color", "black")
-            // $("#" + item).children(".menu").css("background-color", "blue")
+        dom.children(".menu").css("background-color", "yellow")
+        dom.children(".menu").find(".to").text("野指针")
     }
+    // $("#" + item).children(".menu").css("background-color", "blue")
 
 }
 
@@ -422,13 +526,52 @@ function clear_visual() {
     $("#globals").children(".item").remove()
 }
 
+function refresh_point() {
+    for (let [k, v] of point_color) {
+        for (let val in v[1])
+            if ($("#" + v[1][val]).length > 0) {
+                list_pointer($("#" + v[1][val]))
+            } else {
+                let ptr = k
+                if ($("#" + ptr).length > 0) {
+                    let to = $("#" + ptr).find(".name")
+                    if (to.length > 1) {
+                        to = $("#" + ptr).find("#" + ptr).find(".name").text()
+                        $("#" + ptr).find("#" + ptr).css("background-color", "#888a90")
+                    } else {
+                        $("#" + ptr).children(".menu").css("background-color", "#888a90")
+                        to = $("#" + ptr).find(".name").text()
+                    }
+                }
+            }
+    }
+}
 
-// setInterval(() => {
-//     if (state_var == STATE_PAUSE) {
-//         refresh_globals()
-//         refresh_editor()
-//         refresh_stack()
-//         for (let i = 0; i < program.framenum; i++)
-//             updata_frame(program.frames[String(i)], String(i))
-//     }
-// }, 1000)
+function sort_locals() {
+    stack = $('#stack')
+    for (let id = 0; id < program.framenum; id++) {
+        let domlist = stack.children("#" + id).children(".locals").children(".item").get()
+        let sorted = true
+        for (let i = 0; i < domlist.length; i++) {
+            if (domlist[i] < domlist[i + 1]) {
+                sorted = false
+                break
+            }
+        }
+        if (!sorted) {
+            domlist.sort(function(a, b) {
+                var a_v = $(a).attr("id")
+                var b_v = $(b).attr("id")
+                if (a_v > b_v)
+                    return 1
+                else
+                    return -1
+            })
+            stack.children("#" + id).children(".locals").html(domlist)
+        }
+    }
+}
+setInterval(() => {
+    refresh_point()
+    sort_locals()
+}, 100)

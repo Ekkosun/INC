@@ -17,7 +17,15 @@ var ACTION_PAUSE_BREAK = 8
 var ACTION_PAUSE_CONTINUE = 9
 var ACTION_PAUSE_NORM = 10
 var ACTION_COMPILE_FAILED = 11
+var ACTION_RUN_CURSOR = 12
 
 var TIMEOUT = 2000
 
 var ADDR = 40000
+
+var SIZE_MAP = new Map()
+SIZE_MAP.set("int", 4)
+SIZE_MAP.set("float", 4)
+SIZE_MAP.set("point", 8)
+SIZE_MAP.set("double", 8)
+SIZE_MAP.set("char", 1)
