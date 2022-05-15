@@ -167,20 +167,41 @@ function sleep(time) {
     return new Promise((resolve) => setTimeout(resolve, time));
 }
 
+function is_equal_op(str) {
+    if (str.indexOf("=") != -1) {
+        let variable = str.split("=")[1]
+        variable = variable[0].split(" ")
+        for (let i = variable.length - 1; i >= 0; i--) {
+            if (variable[i] != "") {
+                return variable[i]
+            }
+        }
+    } else
+        return null
+}
+
+function is_compare_op(str) {
+    if (str.indexOf("<") != -1 || str.indexOf(">") != -1 || str.indexOf("==") != -1) {
+        let variable = str.split("=")[1]
+        variable = variable[0].split(" ")
+        for (let i = variable.length - 1; i >= 0; i--) {
+            if (variable[i] != "") {
+                return variable[i]
+            }
+        }
+    } else
+        return null
+}
 
 
 function pause_handler() {
     $(".change").removeClass("change")
     $(".point").removeClass("point")
-    program.localnum = 0
     let value = editor.session.getLine(program.curline - 1)
     if (value.indexOf("main()") != -1 || (value.indexOf("{") != -1 && value.indexOf("=") == -1) || (value.indexOf("{") != -1 && value.indexOf("=") == -1)) {
         next_line()
     }
-    if (value.indexOf("=") != -1) {
-        let variable = value.split(" ")[1]
-        console.log(variable + "=")
-    }
+    let variable = is_equal_op(value)
     get_globals_value()
     get_frame()
     refresh_buff() //TODO: jiejue le shen me wen ti
@@ -194,17 +215,52 @@ function pause_handler() {
                 break
             }
         } else {
+            for (let i = 0; i < program.framenum; i++) {
+                if (program.frames[String(i)].arg == null) {
+                    get_frame()
+                    return
+                }
+                for (let j = 0; j < program.frames[String(i)].locals.length; j++) {
+                    if (program.frames[String(i)].locals[j].value == null) {
+                        let n = program.framenum - 1 - i
+                        socket.emit("run_gdb_command", {
+                            "id": id,
+                            "cmd": ["-stack-select-frame " + n, "-stack-select-frame " + n, ((n + 1) * ADDR + j) + "-data-evaluate-expression " + program.frames[String(i)].locals[j].name]
+                        })
+                        return
+                    } else if (program.frames[String(i)].locals[j].addr == null) {
+                        let n = program.framenum - 1 - i
+                        socket.emit("run_gdb_command", {
+                            "id": id,
+                            "cmd": ["-stack-select-frame " + n, "-stack-select-frame " + n, ((n + 1) * ADDR + j) + "-data-evaluate-expression &" + program.frames[String(i)].locals[j].name]
+                        })
+                        return
+
+                    }
+                }
+            }
+            clearInterval(interval)
+            console.log(program)
             setTimeout(() => {
                 if (state_var == STATE_PAUSE) {
                     refresh_globals()
                     refresh_editor()
                     refresh_stack()
                     if_have_attachment(program.curfile, program.curline)
-                    for (let i = 0; i < program.framenum; i++)
+                    for (let i = 0; i < program.framenum; i++) {
+                        console.log(program.frames[String(i)].locals)
                         updata_frame(program.frames[String(i)], String(i))
+                    }
+                    let frame = $("#stack").find("#" + (program.framenum - 1))
+                    let list = frame.find(".item").get()
+                    for (v of list) {
+                        let name = $(v).find(".name").text()
+                        if (name == variable) {
+                            $(v).find(".canzhi").remove()
+                        }
+                    }
                 }
             }, 1000)
-            clearInterval(interval)
         }
     }, 100)
 

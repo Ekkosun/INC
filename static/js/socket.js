@@ -129,7 +129,6 @@ socket.on("error_running_gdb_command", (data) => {
 var test
 socket.on("gdb_response", (data) => {
     response_dispatch(data)
-    console.log(data)
 })
 
 

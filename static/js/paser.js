@@ -13,7 +13,6 @@ SHOW_LOCAL_VAR = 10000
 SHOW_GLOBAL_ADD = 20000
 
 
-
 function response_dispatch(response) {
 
     for (res of response) {
@@ -115,7 +114,7 @@ function parser_global(res) {
             for (let sym of file.symbols) {
                 let varname = sym.name
                 let vartype = sym.type
-                let varvalue = 0
+                let varvalue = null
                 tmp = ""
                 if (is_ptr(vartype)) {
                     tmp = "ptr"
@@ -213,7 +212,7 @@ function parser_frame(res) {
         let level = String(program.framenum - 1 - parseInt(frame.level))
         let func = frame.func
         let line = frame.line
-        let arg = {}
+        let arg = null
             // program.frames[level] = {
             //     "level": level,
             //     "func": func,
@@ -269,7 +268,7 @@ function parser_local(res) {
     for (let local of res.payload.locals) {
         let varname = local.name
         let vartype = local.type
-        let varvalue = null
+        let varvalue = 0
         if (is_array(vartype))
             locals.push({
                 "is": "array",
@@ -299,13 +298,7 @@ function parser_local(res) {
             })
         }
     }
-    for (let i = 0; i < locals.length; i++) {
-        for (let j = i + 1; j < locals.length; j++) {
-            if (locals[i].name == locals[j].name) {
-                locals[j].times = locals[i].times + 1;
-            }
-        }
-    }
+
     var framen = program.framenum - 1 - res.token + 12
     program.frames[String(framen)].locals = locals
     socket.emit("run_gdb_command", {
@@ -313,34 +306,37 @@ function parser_local(res) {
         "cmd": [(res.token - SHOW_LOCAL_TYPE + SHOW_LOCAL_VAR) + "-stack-list-locals --thread 1 --frame " + (res.token - SHOW_LOCAL_TYPE) + " --all-values"]
     })
     cmd_queue.set(String((res.token - SHOW_LOCAL_TYPE + SHOW_LOCAL_VAR)), [(res.token - SHOW_LOCAL_TYPE + SHOW_LOCAL_VAR) + "-stack-list-locals --thread 1 --frame " + (res.token - SHOW_LOCAL_TYPE) + " --all-values"])
-    get_var_addr(String(res.token - SHOW_LOCAL_TYPE))
 }
 
 function get_var_addr(frame) {
     let n = parseInt(frame)
     let framen = String(program.framenum - 1 - n)
-    if (!program.frames[frame])
+    if (!program.frames[framen])
         return
     let locals = program.frames[framen].locals
     if (locals) {
         for (let i = 0; i < locals.length; i++) {
             socket.emit("run_gdb_command", {
                 "id": id,
-                "cmd": ["-stack-select-frame " + frame, ((n + 1) * ADDR + i) + "-data-evaluate-expression &" + locals[i].name]
+                "cmd": ["-stack-select-frame " + n, "-stack-select-frame " + n, ((n + 1) * ADDR + i) + "-data-evaluate-expression &" + locals[i].name]
             })
-            cmd_queue.set(String(((n + 1) * ADDR + i)), ["-stack-select-frame " + frame, ((n + 1) * ADDR + i) + "-data-evaluate-expression &" + locals[i].name])
+            cmd_queue.set(String(((n + 1) * ADDR + i)), ["-stack-select-frame " + n, "-stack-select-frame " + n, ((n + 1) * ADDR + i) + "-data-evaluate-expression &" + locals[i].name])
         }
     }
 }
 
 function set_locals_value(res) {
+
     var framen = program.framenum - 1 - (res.token - SHOW_LOCAL_VAR)
     if (!res.payload.locals)
         return
     for (let i = res.payload.locals.length - 1; i >= 0; i--) {
-        if (res.payload.locals[i].value)
+        if (res.payload.locals[i].value != undefined && program.frames[String(framen)].locals[i] != undefined)
             program.frames[String(framen)].locals[i].value = res.payload.locals[i].value.split(" <")[0]
+        else
+            console.log(framen, i)
     }
+    //get_var_addr(String(res.token - SHOW_LOCAL_VAR))
 }
 
 function escape(name) {
@@ -352,32 +348,15 @@ function escape(name) {
 }
 
 function parser_local_addr(res) {
+    console.log(res)
     var frame = program.framenum - 1 - (Math.floor(res.token / ADDR) - 1)
     var index = res.token % ADDR
     if (!program.frames[String(frame)])
         return
     let name = program.frames[String(frame)].locals[index].name
-    if (!program.frames[String(frame)].locals[index].addr && res.payload.value) {
-        program.frames[String(frame)].locals[index].addr = res.payload.value.split(" ")[0]
+    if (program.frames[String(frame)].locals[index].addr == null && res.payload.value) {
+        program.frames[String(frame)].locals[index].addr = res.payload.value.split(" <")[0]
     }
-    if (res.payload.value)
-        if (program.frames[String(frame)].map) {
-            let i = 0;
-            for (let [key, val] of program.frames[String(frame)].map) {
-                if (key != res.payload.value && val == name) {
-                    i++;
-                } else if (key == res.payload.value && name == escape(val)) {
-                    return
-                }
-            }
-            name = "~".repeat(i) + name
-            program.frames[String(frame)].map.set(res.payload.value, name)
-        } else {
-            program.frames[String(frame)].map = new Map()
-            program.frames[String(frame)].map.set(res.payload.value, name)
-        }
-        // updata_frame(program.frames[String(frame)], String(frame))
-
 }
 
 

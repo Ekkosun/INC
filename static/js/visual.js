@@ -121,7 +121,7 @@ function highlight() {
     return result
 }
 
-function update_var(dom, variable) {
+function update_var(dom, variable, isarg) {
     if (dom.children("#" + variable.addr).length > 0) {
         if (dom.children("#" + variable.addr).find('.ptrorarray').text() == "ptr") {
             let value = dom.children("#" + variable.addr).find('.value').first().text()
@@ -129,6 +129,7 @@ function update_var(dom, variable) {
                 dom.children("#" + variable.addr).find('.value').first().text(variable.value)
                 dom.children("#" + variable.addr).children('.menu').addClass("change")
                 dom.children("#" + variable.addr).removeClass("unused")
+                dom.children("#" + variable.addr).find(".canzhi").remove()
 
             } else {
                 // dom.children("#" + variable.name + variable.times).children('.menu').removeClass("change")
@@ -147,6 +148,8 @@ function update_var(dom, variable) {
                 dom.children("#" + variable.addr).find('.value').first().html(data)
                     // dom.children("#" + variable.addr).children('.menu').addClass("change")
                 dom.children("#" + variable.addr).removeClass("unused")
+                dom.children("#" + variable.addr).find(".canzhi").remove()
+
             } else {
                 dom.children("#" + variable.addr).find('.value').first().html(value)
                     // dom.children("#" + variable.addr).children('.menu').removeClass("change")
@@ -174,6 +177,8 @@ function update_var(dom, variable) {
                 dom.children("#" + variable.addr).find('.value').first().text(variable.value)
                 dom.children("#" + variable.addr).children('.menu').addClass("change")
                 dom.children("#" + variable.addr).removeClass("unused")
+                dom.children("#" + variable.addr).find(".canzhi").remove()
+
             } else {
                 // dom.children("#" + variable.addr).children('.menu').removeClass("change")
                 dom.children("#" + variable.addr).removeClass("unused")
@@ -182,8 +187,10 @@ function update_var(dom, variable) {
         // if (dom.children("#" + variable.name+i).children(".item_list").length 
 
     } else {
-        let item = $("<div " + "id=" + variable.addr + " class='item'>" + "<div class='menu unselect'>" + "<div class='ptrorarray'>" + variable.is + "</div>" + "<div class='type'>" + variable.type + "</div>" + "<div class='name'>" + variable.name + "</div> " + "<div class = 'value'>" + variable.value + "</div>" + "<div class = 'to'>" + "" + "</div>" + "<a><img></a>" + "</div> " + "</div> ")
-
+        let item = $("<div " + "id=" + variable.addr + " class='item'>" + "<div class='menu unselect'>" + "<div class='ptrorarray'>" + variable.is + "</div>" + "<div class='type'>" + variable.type + "</div>" + "<div class='name'>" + variable.name + "</div> " + "<div class = 'value'>" + variable.value + "</div>" + "<div class = 'canzhi'>" + "残值" + "</div>" + "<div class = 'to'>" + "" + "</div>" + "<a><img></a>" + "</div> " + "</div> ")
+        if (dom.attr("id") == "globals" || isarg == true) {
+            item.find(".canzhi").remove()
+        }
         dom.append(item)
         if (variable.is == "ptr") {
             list_pointer(item)
@@ -265,7 +272,7 @@ function updata_frame(frame, level) {
                     "addr": "0y" + i + arg.name
                 }
 
-                update_var(stack.children("#" + id).children(".locals"), tmp)
+                update_var(stack.children("#" + id).children(".locals"), tmp, true)
             }
         stack.children("#" + id).find(".unused").remove()
 
