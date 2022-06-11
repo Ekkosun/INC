@@ -12,6 +12,10 @@ SHOW_LOCAL_TYPE = 12
 SHOW_LOCAL_VAR = 10000
 SHOW_GLOBAL_ADD = 20000
 
+var has_stack = false
+var has_local_list = false
+var is_value = false
+
 
 function response_dispatch(response) {
 
@@ -23,7 +27,7 @@ function response_dispatch(response) {
                 if (res.message.indexOf("stopped") != -1) {
                     console.log(res.payload.reason)
                     if (res.payload.reason.indexOf("exited-normally") != -1) {
-                        document.dispatchEvent(event(ACTION_PAUSE_EXIT))
+                        document.dispatchEvent(event(ACTION_EXIT))
                         alert("程序正常退出")
                     } else if (res.payload.reason.indexOf("breakpoint-hit") != -1) {
                         set_curposition(res)
@@ -91,11 +95,13 @@ function is_ptr(data) {
     return false
 }
 
-function parser_array(data, type) {
+function parser_array(data, type, len) {
     var data = data.substr(1, data.length - 2)
-    var len = parseInt(type.match(/[0-9]+/g))
     if (type.indexOf("char") != -1) {
         var arr = data.match(/\\[0-7]{3}|\\n|\\t|\\b|./g)
+        if (arr.length < len) {
+            arr.push("\\000")
+        }
     } else if (type.indexOf("struct") != -1) {
         arr = data.match(/{.[^}]+}/g)
     } else {
@@ -124,10 +130,12 @@ function parser_global(res) {
                         "type": vartype.substr(0, vartype.indexOf(" ")),
                         "value": varvalue,
                         "times": 0,
+                        "len": parseInt(vartype.match(/[0-9]+/g)),
                         "addr": null
                     })
                 } else if (is_array(vartype)) {
                     tmp = "array"
+                    console.log(vartype)
                     program.globals.push({
                         "is": tmp,
                         "name": varname,
@@ -179,6 +187,7 @@ function set_globals_addr(res) {
 }
 
 function get_frame() {
+    has_stack = false
     socket.emit("run_gdb_command", {
             "id": id,
             "cmd": ["10-stack-list-frames", "11-stack-list-arguments --no-frame-filters --simple-values"],
@@ -204,39 +213,43 @@ function get_locals() {
 
 
 function parser_frame(res) {
-    for (let i = program.framenum; i < res.payload.stack.length; i++) {
-        program.frames[String(i)] = null
-    }
-    program.framenum = res.payload.stack.length
-    for (let frame of res.payload.stack) {
-        let level = String(program.framenum - 1 - parseInt(frame.level))
-        let func = frame.func
-        let line = frame.line
-        let arg = null
-            // program.frames[level] = {
-            //     "level": level,
-            //     "func": func,
-            //     "arg": arg,
-            // }
-        if (program.frames[level]) {
-            program.frames[level].level = level
-            program.frames[level].func = func
-            program.frames[level].arg = arg
-            program.frames[level].line = line
-        } else {
-            program.frames[level] = {
-                "level": level,
-                "func": func,
-                "arg": arg,
-                "line": line,
-                "locals": []
+    if (has_stack == false) {
+        for (let i = program.framenum; i < res.payload.stack.length; i++) {
+            program.frames[String(i)] = null
+        }
+        program.framenum = res.payload.stack.length
+        for (let frame of res.payload.stack) {
+            let level = String(program.framenum - 1 - parseInt(frame.level))
+            let func = frame.func
+            let line = frame.line
+            let arg = null
+                // program.frames[level] = {
+                //     "level": level,
+                //     "func": func,
+                //     "arg": arg,
+                // }
+            if (program.frames[level]) {
+                program.frames[level].level = level
+                program.frames[level].func = func
+                program.frames[level].arg = arg
+                program.frames[level].line = line
+                program.frames[level].locals = null
+            } else {
+                program.frames[level] = {
+                    "level": level,
+                    "func": func,
+                    "arg": arg,
+                    "line": line,
+                    "locals": null
+                }
             }
         }
-    }
-    get_locals()
+        //get_locals()
         // refresh_stack()
         // document.dispatchEvent(refresh())
+        has_stack = true
 
+    }
 }
 
 function parser_frame_arg(res) {
@@ -268,17 +281,20 @@ function parser_local(res) {
     for (let local of res.payload.locals) {
         let varname = local.name
         let vartype = local.type
-        let varvalue = 0
-        if (is_array(vartype))
+        let varvalue = null
+        if (is_array(vartype)) {
+            console.log(vartype)
+
             locals.push({
                 "is": "array",
                 "name": varname,
                 "type": vartype.substr(0, vartype.indexOf(" ")),
                 "value": varvalue,
+                "len": parseInt(vartype.match(/[0-9]+/g)),
                 "times": 0,
                 "addr": null
             })
-        else if (is_ptr(vartype)) {
+        } else if (is_ptr(vartype)) {
             locals.push({
                 "is": "ptr",
                 "name": varname,
@@ -301,11 +317,11 @@ function parser_local(res) {
 
     var framen = program.framenum - 1 - res.token + 12
     program.frames[String(framen)].locals = locals
-    socket.emit("run_gdb_command", {
-        "id": id,
-        "cmd": [(res.token - SHOW_LOCAL_TYPE + SHOW_LOCAL_VAR) + "-stack-list-locals --thread 1 --frame " + (res.token - SHOW_LOCAL_TYPE) + " --all-values"]
-    })
-    cmd_queue.set(String((res.token - SHOW_LOCAL_TYPE + SHOW_LOCAL_VAR)), [(res.token - SHOW_LOCAL_TYPE + SHOW_LOCAL_VAR) + "-stack-list-locals --thread 1 --frame " + (res.token - SHOW_LOCAL_TYPE) + " --all-values"])
+        // socket.emit("run_gdb_command", {
+        //     "id": id,
+        //     "cmd": [(res.token - SHOW_LOCAL_TYPE + SHOW_LOCAL_VAR) + "-stack-list-locals --thread 1 --frame " + (res.token - SHOW_LOCAL_TYPE) + " --all-values"]
+        // })
+        // cmd_queue.set(String((res.token - SHOW_LOCAL_TYPE + SHOW_LOCAL_VAR)), [(res.token - SHOW_LOCAL_TYPE + SHOW_LOCAL_VAR) + "-stack-list-locals --thread 1 --frame " + (res.token - SHOW_LOCAL_TYPE) + " --all-values"])
 }
 
 function get_var_addr(frame) {
@@ -331,9 +347,12 @@ function set_locals_value(res) {
     if (!res.payload.locals)
         return
     for (let i = res.payload.locals.length - 1; i >= 0; i--) {
-        if (res.payload.locals[i].value != undefined && program.frames[String(framen)].locals[i] != undefined)
+        if (res.payload.locals[i].value != undefined && program.frames[String(framen)].locals[i] != undefined) {
             program.frames[String(framen)].locals[i].value = res.payload.locals[i].value.split(" <")[0]
-        else
+            if (program.frames[String(framen)].locals[i].value.indexOf(" \"" != -1)) {
+                program.frames[String(framen)].locals[i].value = program.frames[String(framen)].locals[i].value.split(" \"")[0]
+            }
+        } else
             console.log(framen, i)
     }
     //get_var_addr(String(res.token - SHOW_LOCAL_VAR))
@@ -348,16 +367,25 @@ function escape(name) {
 }
 
 function parser_local_addr(res) {
-    console.log(res)
     var frame = program.framenum - 1 - (Math.floor(res.token / ADDR) - 1)
     var index = res.token % ADDR
     if (!program.frames[String(frame)])
         return
-    let name = program.frames[String(frame)].locals[index].name
-    if (program.frames[String(frame)].locals[index].addr == null && res.payload.value) {
-        program.frames[String(frame)].locals[index].addr = res.payload.value.split(" <")[0]
+    if (is_value == false) {
+        if (program.frames[String(frame)].locals[index].addr == null && res.payload.value) {
+            program.frames[String(frame)].locals[index].addr = res.payload.value.split(" <")[0]
+            if (program.frames[String(frame)].locals[index].addr.indexOf(" \"" != -1)) {
+                program.frames[String(frame)].locals[index].addr = program.frames[String(frame)].locals[index].addr.split(" \"")[0]
+            }
+        }
+    } else {
+        program.frames[String(frame)].locals[index].value = res.payload.value.split(" <")[0]
+        if (program.frames[String(frame)].locals[index].value.indexOf(" \"" != -1)) {
+            program.frames[String(frame)].locals[index].value = program.frames[String(frame)].locals[index].value.split(" \"")[0]
+        }
     }
 }
+
 
 
 function get_addr(variable, frame) {

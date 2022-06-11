@@ -411,6 +411,20 @@
     width: 600px;
 }
 
+#usr_list {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    margin-left: 40px;
+    width: 600px;
+}
+
+.usr_item {
+    display: flex;
+    flex-direction: row;
+    border-bottom: 1px solid black;
+}
+
 #example {
     flex-direction: column;
 }

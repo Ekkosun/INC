@@ -6,6 +6,7 @@ import logging
 import os
 from utils import *
 import magic
+import pandas as pd
 
 main = Blueprint("main_route",__name__)
 
@@ -161,7 +162,51 @@ def send_attachment_list():
         "list":files
     })
 
+@main.route("/admin/ask_usr_list",methods=["POST"])
+def send_usr_list():
+    usr = User.query.all()
+    data = []
+    for u in usr:
+        data.append({
+            "usr_name":u.id,
+            "usr_line":u.name,
+            "usr_des":u.email
+        })
+    return jsonify({
+        "list":data
+    })
 
+@main.route("/admin/delete_usr",methods=["POST"])
+def delete_usr():
+    form = request.form
+    id = form["id"]
+    usr = User.find(id)
+    if usr:
+        db.session.delete(usr)
+        db.session.commit()
+    return  jsonify({
+        "status":True
+    })
+
+@main.route("/admin/upload_csv",methods=["POST"])
+def parse_csv():
+    file = request.files['file']
+    csv_data = pd.read_csv(file,names=['0','1','2','3'])
+    for _,row in csv_data.iterrows():
+        value = row.values
+        print(value)
+        if(User.find(value[0])):
+            continue
+        else: 
+            User.add(value[0],value[1],value[3],value[2])
+    return jsonify({
+        "status":True
+    })
+
+
+@main.route("/admin")
+def admin():
+    return render_template("admin.html")
 
 @websocket.on("pull_file",namespace="/gdb_listener")
 def push_file(data):

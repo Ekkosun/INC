@@ -11,14 +11,15 @@ class User(db.Model):
     id = db.Column(db.String(40),primary_key=True)
     password = db.Column(db.String(40))
     name = db.Column(db.String(40),unique=False,nullable=False)
+    email = db.Column(db.String(40),unique=False,nullable=False)
     dir_path = db.Column(db.String(200),unique=False,nullable=True)
 
     def __repr__(self):
         return '<id %r>' % self.id
 
 
-    def add(id,password,name):
-        user_obj = User(id=id,password=password,name=name,dir_path="")
+    def add(id,password,name,email):
+        user_obj = User(id=id,password=password,name=name,dir_path="",email=email)
         db.session.add(user_obj)
         db.session.commit()
 

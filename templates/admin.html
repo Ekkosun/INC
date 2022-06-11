@@ -1,0 +1,131 @@
+<!doctype html>
+<html style="height: 100%;">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- prettier-ignore -->
+<script src="static/lib/jquery.min.js"></script>
+<link rel="stylesheet" href="static/css/main.css">
+
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Admin</title>
+</head>
+
+<body>
+    <div id="usr_list">
+        <div class="usr_item">
+            <div class="example_id">用户id</div>
+            <div class="example_name">用户姓名</div>
+            <div class="example_description">用户邮箱</div>
+        </div>
+    </div>
+    <div id="upload_csv">
+        <form style="width: 80%; height: 100%">
+            <div class="text_layout">
+                <label for="csv" class="form-label">通过csv导入用户</label>
+                <input id="csv" type="file" class="form-control" name="file">
+            </div>
+            <div class="btn_layout">
+                <input id="csv_submit" type="submit" class="btn btn-primary" alue="submit">
+            </div>
+        </form>
+    </div>
+</body>
+
+<script>
+    function get_usr_list() {
+        var form_data = new FormData();
+
+        $.ajax({
+            url: window.origin + '/admin/ask_usr_list',
+            type: 'POST',
+            dataType: "json",
+            cache: false,
+            contentType: false,
+            processData: false,
+            data: form_data,
+            success: function(result) {
+                $('#usr_list').children(".refresh_haha").remove()
+
+                if (result) {
+                    let list = result["list"]
+                    if (list) {
+                        for (let li of list) {
+
+                            let arr = li
+                            let item = $("<div class='usr_item  refresh_haha' href='javascript:void(0)'>\
+                        <div class='example_id'>" + arr["usr_name"] + "</div>\
+                        <div class='example_name'>" + arr["usr_line"] + "</div>\
+                        <div class='example_description'>" + arr["usr_des"] + "</div>\
+                        <button class='delete_button'></button>\
+                    </div>")
+                            $('#usr_list').append(item)
+                        }
+                        $('#usr_list').on("click", ".delete_button", function() {
+                            let item = $(this).parent()
+                            let id = item.find(".example_id").text()
+                            delete_usr(id)
+                        })
+                    }
+                }
+            },
+        });
+
+    }
+    get_usr_list()
+
+    var attachment = {}
+
+    function delete_usr(id) {
+        var form_data = new FormData();
+        form_data.append("id", id)
+        $.ajax({
+            url: window.origin + '/admin/delete_usr',
+            type: 'POST',
+            dataType: "json",
+            cache: false,
+            contentType: false,
+            processData: false,
+            data: form_data,
+            success: function(result) {
+
+                get_usr_list()
+            },
+        });
+    }
+    $('#csv').on('change', (e) => {
+        let fileList = e.target.files
+        console.log(fileList)
+        if (fileList.length == 0) {
+            return;
+        }
+        // var reader = new FileReader();
+
+        attachment.data = fileList[0]
+            // reader.onload = function(e) {
+            //     attachment.data = this.result
+            // };
+            // reader.readAsDataURL(fileList[0])
+
+    })
+    $('#csv_submit').on('click', (e) => {
+        e.preventDefault()
+        var form_data = new FormData();
+        form_data.append("file", attachment.data)
+        $.ajax({
+            url: window.origin + '/admin/upload_csv',
+            type: 'POST',
+            dataType: "json",
+            cache: false,
+            contentType: false,
+            processData: false,
+            data: form_data,
+            success: function() {
+                get_usr_list()
+            }
+        });
+    })
+</script>
+
+</html>

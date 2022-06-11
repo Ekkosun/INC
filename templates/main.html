@@ -20,9 +20,8 @@
 <link rel="stylesheet" href="//code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
 <link href="//cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
 <script src="//cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/jcubic/jquery.terminal@devel/js/jquery.terminal.min.js"></script>
-<script src="static/lib/chart.min.js"></script>
-<link href="https://cdn.jsdelivr.net/gh/jcubic/jquery.terminal@devel/css/jquery.terminal.min.css" rel="stylesheet" />
+<script src="static/lib/jquery.terminal-2.33.3.min.js"></script>
+<link href="static/lib/jquery.terminal-2.33.3.min.css" rel="stylesheet" />
 
 <head>
     <meta charset="utf-8">
@@ -290,6 +289,28 @@
                 locals = $(this).children('.locals')
                 locals.addClass('open');
             }
+    });
+    $('#stack').on('dblclick', ".cards", function(e) {
+        if ($(this).hasClass('open')) {
+            $(this).removeClass('open');
+            // $('.cards').removeClass('shadow-2');
+            $(this).removeClass('shadow-2');
+            let locals = $(this).children('.locals')
+            locals.removeClass('open');
+            $(this).addClass('shadow-1');
+
+            return false;
+        } else {
+            // $('.cards').removeClass('open');
+            // $('.cards').removeClass('shadow-2');
+            $(this).removeClass('shadow-2');
+            // let locals = $('.cards').children('.locals')
+            // locals.removeClass('open');
+            $(this).addClass('open');
+            $(this).addClass('shadow-2');
+            locals = $(this).children('.locals')
+            locals.addClass('open');
+        }
     });
     iscontinue = 0
 </script>

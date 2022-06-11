@@ -1,15 +1,16 @@
 var stack = document.getElementById("stack")
 
 
-function list_item(item, open) {
+function list_item(item, open, len) {
     let data = item.find('.value').first().text()
     let type = item.find('.type').first().text()
     let addr = item.attr("id")
     let element_size = SIZE_MAP.get(type)
-    data = parser_array(data, type)
+    data = parser_array(data, type, len)
     let name = item.find('.name').text()
     if (item.children("ul").length <= 0) {
         list = $("<ul class='item_list'></ul>")
+        let i = 0
         for (i = 0; i < data.length; i++) {
             let id = element_size * (i) + parseInt(addr)
             id = "0x" + id.toString(16)
@@ -40,24 +41,15 @@ function create_frame(func, id) {
     </div>\
     </div>")
     $('#stack').append(frame)
-        // frame.children(".locals").on('dblclick', ".item", function() {
-        //     let data = $(this).find('.ptrorarray').text()
-        //     if ($(this).find('.ptrorarray').text() == "") {
-        //         return
-        //     } else if ($(this).find('.ptrorarray').first().text() == "array") {
-        //         list_item($(this), true)
-        //     } else if ($(this).find('.ptrorarray').first().text() == "ptr") {
-        //         list_pointer($(this))
-        //     }
-        // })
 }
 
 
-function updata_list(item) {
+function updata_list(item, len) {
     let data = item.find('.value').first().text()
     let type = item.find('.type').first().text()
-    data = parser_array(data, type)
+    data = parser_array(data, type, len)
     if (item.children("ul").length > 0) {
+        let i = 0
         for (i = 0; i < data.length; i++) {
             if (item.children("ul").children("li").eq(i).children('.value').text() == data[i]) {
                 // item.children("ul").children("li").eq(i).removeClass("change")
@@ -67,12 +59,13 @@ function updata_list(item) {
                 item.children("ul").children("li").eq(i).children('.value').text(data[i])
             }
         }
+
     }
 }
 
-function startCompare(a, b, type) {
+function startCompare(a, b, type, len) {
 
-    var result = highlight(parser_array(a, type), parser_array(b, type));
+    var result = highlight(parser_array(a, type, len), parser_array(b, type, len));
     return result;
 }
 
@@ -140,12 +133,20 @@ function update_var(dom, variable, isarg) {
         } else if (dom.children("#" + variable.addr).find('.ptrorarray').text() == "array") {
             let value = dom.children("#" + variable.addr).find('.value').first().text()
             if (value != variable.value) {
-                let result = startCompare(value, variable.value, variable.type)
-                let data = "{"
-                for (let res of result[1])
-                    data = data + res + ", "
-                data = data.substring(0, data.length - 2) + "}"
-                dom.children("#" + variable.addr).find('.value').first().html(data)
+                let result = startCompare(value, variable.value, variable.type, variable.len)
+                let text = ""
+                if (variable.type.indexOf("char") == -1) {
+                    text = "{"
+                    for (let res of result[1])
+                        text = text + res + ", "
+                    text = text.substring(0, text.length - 2) + "}"
+                } else {
+                    text = "\""
+                    for (let res of result[1])
+                        text = text + res
+                    text = text.substring(0, text.length) + "\""
+                }
+                dom.children("#" + variable.addr).find('.value').first().html(text)
                     // dom.children("#" + variable.addr).children('.menu').addClass("change")
                 dom.children("#" + variable.addr).removeClass("unused")
                 dom.children("#" + variable.addr).find(".canzhi").remove()
@@ -167,7 +168,7 @@ function update_var(dom, variable, isarg) {
             //         list_item(dom.children("#" + variable.addr), true)
             //     })
             // }, 500)
-            updata_list(dom.children("#" + variable.addr))
+            updata_list(dom.children("#" + variable.addr), variable.len)
 
             // list_item(dom.children("#" + variable.addr), false)
             // dom.children("#" + variable.addr).children('.menu').removeClass("change")
@@ -196,13 +197,13 @@ function update_var(dom, variable, isarg) {
             list_pointer(item)
         } else if (variable.is == "array") {
             item.find("img").attr("src", "static/icon/expand-all.svg")
-            list_item(item, false)
+            list_item(item, false, variable.len)
             item.find("img").off()
             item.find("img").on("click", () => {
-                list_item(item, true)
+                list_item(item, true, variable.len)
             })
             item.on("dblclick", () => {
-                list_item(item, true)
+                list_item(item, true, variable.len)
             })
         }
 
@@ -266,8 +267,8 @@ function updata_frame(frame, level) {
                 let tmp = {
                     "is": type,
                     "name": arg.name,
-                    "value": arg.value.split(" <")[0],
-                    "type": arg.type.split(" *")[0],
+                    "value": arg.value.split(" ")[0],
+                    "type": arg.type.split(" ")[0],
                     "times": 0,
                     "addr": "0y" + i + arg.name
                 }
@@ -450,6 +451,7 @@ function list_pointer(dom) {
                         $("#" + k).find("#" + k).css("background-color", "#888a90")
                     } else {
                         $("#" + k).children(".menu").css("background-color", "#888a90")
+                        $("#" + k).css("background-color", "#888a90")
                         to = $("#" + k).find(".name").text()
                     }
                 }
@@ -485,6 +487,7 @@ function list_pointer(dom) {
             to = $("#" + ptr).find("#" + ptr).find(".name").text()
             $("#" + ptr).find("#" + ptr).css("background-color", point_color.get(ptr)[0])
         } else {
+            $("#" + ptr).css("background-color", point_color.get(ptr)[0])
             $("#" + ptr).children(".menu").css("background-color", point_color.get(ptr)[0])
             to = $("#" + ptr).find(".name").text()
         }
@@ -592,6 +595,7 @@ function refresh_point() {
                         $("#" + ptr).find("#" + ptr).css("background-color", "#888a90")
                     } else {
                         $("#" + ptr).children(".menu").css("background-color", "#888a90")
+                        $("#" + ptr).css("background-color", "#888a90")
                         to = $("#" + ptr).find(".name").text()
                     }
                 }

@@ -1,6 +1,7 @@
 var state_var = STATE_EDIT
 timeoutid = 0
-
+var cur_send = ""
+var timeout = 0
 
 document.addEventListener("action", (e) => { state_machine(e) })
 
@@ -117,6 +118,9 @@ function state_machine(e) {
             } else if (action == ACTION_EXIT) {
                 exit_run()
                 state_var = STATE_PRELOAD
+            } else if (action == ACTION_COMPILE) {
+                compile_load()
+                state_var = STATE_PRELOAD
             }
 
             break
@@ -169,13 +173,8 @@ function sleep(time) {
 
 function is_equal_op(str) {
     if (str.indexOf("=") != -1) {
-        let variable = str.split("=")[1]
-        variable = variable[0].split(" ")
-        for (let i = variable.length - 1; i >= 0; i--) {
-            if (variable[i] != "") {
-                return variable[i]
-            }
-        }
+        let variable = str.split("=")[0]
+        return variable
     } else
         return null
 }
@@ -183,7 +182,8 @@ function is_equal_op(str) {
 function is_compare_op(str) {
     if (str.indexOf("<") != -1 || str.indexOf(">") != -1 || str.indexOf("==") != -1) {
         let variable = str.split("=")[1]
-        variable = variable[0].split(" ")
+        if (variable.length > 0)
+            variable = variable[0].split(" ")
         for (let i = variable.length - 1; i >= 0; i--) {
             if (variable[i] != "") {
                 return variable[i]
@@ -198,71 +198,82 @@ function pause_handler() {
     $(".change").removeClass("change")
     $(".point").removeClass("point")
     let value = editor.session.getLine(program.curline - 1)
+    console.log(value)
+    program.framenum = 0
     if (value.indexOf("main()") != -1 || (value.indexOf("{") != -1 && value.indexOf("=") == -1) || (value.indexOf("{") != -1 && value.indexOf("=") == -1)) {
         next_line()
     }
+    value = editor.session.getLine(program.curline - 2)
     let variable = is_equal_op(value)
     get_globals_value()
     get_frame()
     refresh_buff() //TODO: jiejue le shen me wen ti
     let interval = setInterval(() => {
-        if (cmd_queue.size > 0) {
-            for (let [k, v] of cmd_queue) {
-                socket.emit("run_gdb_command", {
-                    "id": id,
-                    "cmd": v
-                })
-                break
+        if (program.framenum == 0) {
+            if (cur_send != "get_frame") {
+                cur_send = "get_frame"
+                get_frame()
             }
-        } else {
-            for (let i = 0; i < program.framenum; i++) {
-                if (program.frames[String(i)].arg == null) {
-                    get_frame()
+            return
+        }
+        for (let i = 0; i < program.framenum; i++) {
+            if (program.frames[String(i)].locals == null) {
+                if (cur_send != "get_locals") {
+                    cur_send = "get_locals"
+                    get_locals()
+                }
+                return
+            }
+            for (let j = 0; j < program.frames[String(i)].locals.length; j++) {
+                if (program.frames[String(i)].locals[j].value == null) {
+                    is_value = true
+                    let n = program.framenum - 1 - i
+                    if (cur_send != "value " + n + j) {
+                        socket.emit("run_gdb_command", {
+                            "id": id,
+                            "cmd": ["-stack-select-frame " + n, ((n + 1) * ADDR + j) + "-data-evaluate-expression " + program.frames[String(i)].locals[j].name]
+                        })
+                        cur_send = "value " + n + j
+                    }
+                    return
+                } else if (program.frames[String(i)].locals[j].addr == null) {
+                    is_value = false
+                    let n = program.framenum - 1 - i
+                    if (cur_send != "addr " + n + j) {
+                        socket.emit("run_gdb_command", {
+                            "id": id,
+                            "cmd": ["-stack-select-frame " + n, ((n + 1) * ADDR + j) + "-data-evaluate-expression &" + program.frames[String(i)].locals[j].name]
+                        })
+                        cur_send = "addr " + n + j
+                    }
                     return
                 }
-                for (let j = 0; j < program.frames[String(i)].locals.length; j++) {
-                    if (program.frames[String(i)].locals[j].value == null) {
-                        let n = program.framenum - 1 - i
-                        socket.emit("run_gdb_command", {
-                            "id": id,
-                            "cmd": ["-stack-select-frame " + n, "-stack-select-frame " + n, ((n + 1) * ADDR + j) + "-data-evaluate-expression " + program.frames[String(i)].locals[j].name]
-                        })
-                        return
-                    } else if (program.frames[String(i)].locals[j].addr == null) {
-                        let n = program.framenum - 1 - i
-                        socket.emit("run_gdb_command", {
-                            "id": id,
-                            "cmd": ["-stack-select-frame " + n, "-stack-select-frame " + n, ((n + 1) * ADDR + j) + "-data-evaluate-expression &" + program.frames[String(i)].locals[j].name]
-                        })
-                        return
-
-                    }
-                }
             }
-            clearInterval(interval)
-            console.log(program)
-            setTimeout(() => {
-                if (state_var == STATE_PAUSE) {
-                    refresh_globals()
-                    refresh_editor()
-                    refresh_stack()
-                    if_have_attachment(program.curfile, program.curline)
-                    for (let i = 0; i < program.framenum; i++) {
-                        console.log(program.frames[String(i)].locals)
-                        updata_frame(program.frames[String(i)], String(i))
-                    }
-                    let frame = $("#stack").find("#" + (program.framenum - 1))
-                    let list = frame.find(".item").get()
+        }
+        clearInterval(interval)
+        setTimeout(() => {
+            if (state_var == STATE_PAUSE) {
+                refresh_globals()
+                refresh_editor()
+                refresh_stack()
+                if_have_attachment(program.curfile, program.curline)
+                for (let i = 0; i < program.framenum; i++) {
+                    updata_frame(program.frames[String(i)], String(i))
+                }
+                let frame = $("#stack").find("#" + (program.framenum - 1))
+                let list = frame.find(".item").get()
+                if (variable != null)
                     for (v of list) {
                         let name = $(v).find(".name").text()
-                        if (name == variable) {
-                            $(v).find(".canzhi").remove()
+                        if (variable.indexOf(name) != -1) {
+                            let i = variable.indexOf(name) + name.length
+                            if (i == variable.length || variable[i] == " ")
+                                $(v).find(".canzhi").remove()
                         }
                     }
-                }
-            }, 1000)
-        }
-    }, 100)
+            }
+        }, 500)
+    }, 10)
 
 }
 

@@ -263,7 +263,7 @@ def compile_handler(data):
         if x.is_file() and (x.suffix == ".out" or x.suffix==".o"):
             os.remove(x.as_posix())
     os.chdir(path)
-    cmd = f"gcc  -fno-stack-protector -g -c *.c "
+    cmd = f"gcc  -fno-stack-protector -g -c *.c   "
     cmd += f"2>out 1>/dev/null"
     print(cmd)
     os.system(cmd)
@@ -325,6 +325,14 @@ def public_example(data):
     path = app.config["EXAMPLE_PATH"]
     example_path = os.path.join(path,id)
     cur_path = os.path.join(app.config["STORE_PATH"],id)
+    out_path = os.path.join(cur_path,"a.out")
+    print(out_path)
+    if(not os.path.exists(out_path)):
+        emit("public_example_response",{
+            "status":False,
+            "err":f"This example is not compiled"
+        })
+        return
     if(Example.find(name,id)):
         print(name,id)
         print(Example.find(name,id))
@@ -445,4 +453,5 @@ def delete_attachment(data):
 
 if __name__ == '__main__':
     db.create_all()
+    # User.add("0","0","swj","178380101@qq.com")
     websocket.run(app, "0.0.0.0",debug=False)
