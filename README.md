@@ -17,6 +17,5 @@ current_app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://%s:%s@%s:数据
 ```
 
 ## 项目的运行
-
-进入到/src 目录中,使用如下命令运行：
+将该项目保存到src文件夹下,进入到src目录,使用如下命令运行：
 `python server.py` 或 `python3 server.py`
