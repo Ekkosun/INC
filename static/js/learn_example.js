@@ -1,1 +1,47 @@
-const a4_0x37c8ab=a4_0x3d31;(function(_0x24121d,_0x483c3e){const _0x542e4b=a4_0x3d31,_0x350987=_0x24121d();while(!![]){try{const _0x313756=parseInt(_0x542e4b(0x17c))/0x1*(-parseInt(_0x542e4b(0x162))/0x2)+-parseInt(_0x542e4b(0x15f))/0x3+parseInt(_0x542e4b(0x174))/0x4*(parseInt(_0x542e4b(0x17d))/0x5)+-parseInt(_0x542e4b(0x178))/0x6+-parseInt(_0x542e4b(0x172))/0x7+-parseInt(_0x542e4b(0x180))/0x8*(-parseInt(_0x542e4b(0x168))/0x9)+-parseInt(_0x542e4b(0x16a))/0xa*(-parseInt(_0x542e4b(0x169))/0xb);if(_0x313756===_0x483c3e)break;else _0x350987['push'](_0x350987['shift']());}catch(_0x203d4c){_0x350987['push'](_0x350987['shift']());}}}(a4_0x1d91,0x94dbd),$('#learn')['on'](a4_0x37c8ab(0x165),function(){const _0x44b1d1=a4_0x37c8ab;$(_0x44b1d1(0x160))[_0x44b1d1(0x176)](_0x44b1d1(0x16b),_0x44b1d1(0x175)),get_example_list();}),$(a4_0x37c8ab(0x17f))['on'](a4_0x37c8ab(0x165),function(){const _0x19d1e3=a4_0x37c8ab;$(_0x19d1e3(0x160))[_0x19d1e3(0x176)](_0x19d1e3(0x16b),_0x19d1e3(0x16c));}),$(a4_0x37c8ab(0x163))['on'](a4_0x37c8ab(0x165),'a',function(){const _0x5c46ab=a4_0x37c8ab;let _0x544516=$(this)[_0x5c46ab(0x177)](_0x5c46ab(0x179))[_0x5c46ab(0x167)](),_0x4e3e0d=$(this)[_0x5c46ab(0x177)](_0x5c46ab(0x17e))[_0x5c46ab(0x167)]();get_path(_0x544516,_0x4e3e0d);}));function get_example_list(){const _0x3dd90f=a4_0x37c8ab;socket[_0x3dd90f(0x170)]('get_example_list');}function a4_0x3d31(_0x5a14c1,_0x5c7f9c){const _0x1d91b2=a4_0x1d91();return a4_0x3d31=function(_0x3d31bb,_0x2a7129){_0x3d31bb=_0x3d31bb-0x15f;let _0x34b58c=_0x1d91b2[_0x3d31bb];return _0x34b58c;},a4_0x3d31(_0x5a14c1,_0x5c7f9c);}function a4_0x1d91(){const _0x2b9d12=['#example','get_path','14qRBKSK','#example_list','</div>\x20\x20\x20\x20\x20\x20\x20\x20</a>','click','list','text','375651NKsRxH','38137ilRpSa','6330TEFGnE','display','none','append','remove','<a\x20class=\x27example_item\x20selection\x27\x20href=\x27javascript:void(0)\x27>\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x27example_id\x27>','emit','get_path_response','8411837ETnONa','split','584444xTOaJH','flex','css','children','5090376YFbEcJ','.example_id','</div>\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x27example_description\x27>','path','27803dRWrBL','5bEPiJJ','.example_name','#cancel-learn','184oQPzcH','1338858nUVrzD'];a4_0x1d91=function(){return _0x2b9d12;};return a4_0x1d91();}function get_path(_0x247bf1,_0x31bf28){const _0x33c472=a4_0x37c8ab;socket['emit'](_0x33c472(0x161),{'author_id':_0x247bf1,'id':id,'name':_0x31bf28});}socket['on'](a4_0x37c8ab(0x171),_0xa7fa9d=>{const _0xf6eb8a=a4_0x37c8ab;PullFile(_0xa7fa9d[_0xf6eb8a(0x17b)]),refresh_tree();}),socket['on']('example_list',_0x3fd624=>{const _0x30bc48=a4_0x37c8ab;$(_0x30bc48(0x163))[_0x30bc48(0x177)]('a')[_0x30bc48(0x16e)]();let _0x70f630=_0x3fd624[_0x30bc48(0x166)];if(_0x70f630)for(let _0xf6135d of _0x70f630){let _0x30eb45=_0xf6135d[_0x30bc48(0x173)]('\x20'),_0x35ea57=$(_0x30bc48(0x16f)+_0x30eb45[0x0]+'</div>\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x27example_name\x27>'+_0x30eb45[0x1]+_0x30bc48(0x17a)+_0x30eb45[0x2]+_0x30bc48(0x164));$(_0x30bc48(0x163))[_0x30bc48(0x16d)](_0x35ea57);}});
+$("#learn").on('click', function() {
+    $('#example').css("display", "flex")
+    get_example_list()
+})
+
+$('#cancel-learn').on('click', function() {
+    $('#example').css("display", "none")
+})
+
+$('#example_list').on('click', "a", function() {
+    let id = $(this).children(".example_id").text()
+    let name = $(this).children(".example_name").text()
+    get_path(id, name)
+})
+
+function get_example_list() {
+    socket.emit("get_example_list")
+}
+
+function get_path(author_id, name) {
+    socket.emit("get_path", {
+        "author_id": author_id,
+        "id": id,
+        "name": name
+    })
+}
+
+socket.on("get_path_response", (data) => {
+    PullFile(data["path"])
+    refresh_tree()
+})
+
+socket.on("example_list", (data) => {
+    $('#example_list').children("a").remove()
+    let list = data["list"]
+    if (list) {
+        for (let li of list) {
+            let arr = li.split(" ")
+            let item = $("<a class='example_item selection' href='javascript:void(0)'>\
+            <div class='example_id'>" + arr[0] + "</div>\
+            <div class='example_name'>" + arr[1] + "</div>\
+            <div class='example_description'>" + arr[2] + "</div>\
+        </a>")
+            $('#example_list').append(item)
+        }
+    }
+})

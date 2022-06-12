@@ -5,11 +5,11 @@ import logging
 from gdbsession import SessionManager
 manager= SessionManager()
 current_app.config["SECRET_KEY"] = secrets.token_hex()
-user = 'bishe'
-password = 'bishe200078'
-host = "localhost"
-database = 'bishe'
-current_app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://%s:%s@%s:3306/%s' % (user,password,host,database)
+user = ''
+password = ''
+host = ""
+database = ''
+current_app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://%s:%s@%s:数据库端口/%s' % (user,password,host,database)
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 # current_app.config['SQLALCHEMY_ECHO'] = True
 current_app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = False

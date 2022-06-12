@@ -1,1 +1,31 @@
-function a1_0x5c85(){var _0x175301=['char','8pdWxmq','98sNPZmZ','48JnXVPy','float','double','294498wgkbBc','8AeVAEz','162371UFpPMX','751784muNHfx','20730yrroGr','8475012vWiyDs','set','int','466030mzQghF','53250ZpqouU','20mfcmTN'];a1_0x5c85=function(){return _0x175301;};return a1_0x5c85();}var a1_0x53a7a=a1_0x19d7;(function(_0x4b9bc9,_0x1e4c5c){var _0x8ee751=a1_0x19d7,_0x5e2910=_0x4b9bc9();while(!![]){try{var _0x5a9b1e=parseInt(_0x8ee751(0x133))/0x1+-parseInt(_0x8ee751(0x135))/0x2*(-parseInt(_0x8ee751(0x12e))/0x3)+-parseInt(_0x8ee751(0x132))/0x4*(-parseInt(_0x8ee751(0x139))/0x5)+-parseInt(_0x8ee751(0x13a))/0x6*(-parseInt(_0x8ee751(0x13e))/0x7)+parseInt(_0x8ee751(0x13d))/0x8*(parseInt(_0x8ee751(0x131))/0x9)+-parseInt(_0x8ee751(0x13b))/0xa*(-parseInt(_0x8ee751(0x134))/0xb)+-parseInt(_0x8ee751(0x136))/0xc;if(_0x5a9b1e===_0x1e4c5c)break;else _0x5e2910['push'](_0x5e2910['shift']());}catch(_0x104ac4){_0x5e2910['push'](_0x5e2910['shift']());}}}(a1_0x5c85,0x18e90));var STATE_EDIT=0x0,STATE_PRELOAD=0x1,STATE_RUN=0x2,STATE_PAUSE=0x3,STATE_EXIT=0x4,STATE_CONTINUE=0x5,ACTION_COMPILE=0x0,ACTION_START=0x1,ACTION_NEXT=0x2,ACTION_STEPIN=0x3,ACTION_STEPOUT=0x4,ACTION_CONTINUE=0x5,ACTION_EXIT=0x6,ACTION_PAUSE_EXIT=0x7,ACTION_PAUSE_BREAK=0x8,ACTION_PAUSE_CONTINUE=0x9,ACTION_PAUSE_NORM=0xa,ACTION_COMPILE_FAILED=0xb,ACTION_RUN_CURSOR=0xc,TIMEOUT=0x1388,ADDR=0x9c40,SIZE_MAP=new Map();function a1_0x19d7(_0x530d2d,_0x5e28e9){var _0x5c85fa=a1_0x5c85();return a1_0x19d7=function(_0x19d789,_0x174af1){_0x19d789=_0x19d789-0x12e;var _0x129dd5=_0x5c85fa[_0x19d789];return _0x129dd5;},a1_0x19d7(_0x530d2d,_0x5e28e9);}SIZE_MAP[a1_0x53a7a(0x137)](a1_0x53a7a(0x138),0x4),SIZE_MAP[a1_0x53a7a(0x137)](a1_0x53a7a(0x12f),0x4),SIZE_MAP[a1_0x53a7a(0x137)]('point',0x8),SIZE_MAP[a1_0x53a7a(0x137)](a1_0x53a7a(0x130),0x8),SIZE_MAP[a1_0x53a7a(0x137)](a1_0x53a7a(0x13c),0x1);
+var STATE_EDIT = 0
+var STATE_PRELOAD = 1
+var STATE_RUN = 2
+var STATE_PAUSE = 3
+var STATE_EXIT = 4
+var STATE_CONTINUE = 5
+
+var ACTION_COMPILE = 0
+var ACTION_START = 1
+var ACTION_NEXT = 2
+var ACTION_STEPIN = 3
+var ACTION_STEPOUT = 4
+var ACTION_CONTINUE = 5
+var ACTION_EXIT = 6
+var ACTION_PAUSE_EXIT = 7
+var ACTION_PAUSE_BREAK = 8
+var ACTION_PAUSE_CONTINUE = 9
+var ACTION_PAUSE_NORM = 10
+var ACTION_COMPILE_FAILED = 11
+var ACTION_RUN_CURSOR = 12
+
+var TIMEOUT = 5000
+
+var ADDR = 40000
+
+var SIZE_MAP = new Map()
+SIZE_MAP.set("int", 4)
+SIZE_MAP.set("float", 4)
+SIZE_MAP.set("point", 8)
+SIZE_MAP.set("double", 8)
+SIZE_MAP.set("char", 1)
